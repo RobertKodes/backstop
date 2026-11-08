@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { autoBidAmount, chunkPlan, holdersToCheckpoint, nextOfferAction, OFFER_STATUS, shuffle } from "../src/planner.js";
+import {
+  autoBidAmount,
+  chunkPlan,
+  holdersToCheckpoint,
+  nextOfferAction,
+  OFFER_STATUS,
+  shuffle,
+} from "../src/planner.js";
 
 const base = {
   status: OFFER_STATUS.OPEN,
@@ -60,7 +67,15 @@ describe("helpers", () => {
     expect(chunkPlan(0n, 100n)).toEqual([]);
   });
   it("selects idle holders", () => {
-    expect(holdersToCheckpoint([{ wallet: "a", rewardEpoch: 10 }, { wallet: "b", rewardEpoch: 400 }], 500)).toEqual(["a"]);
+    expect(
+      holdersToCheckpoint(
+        [
+          { wallet: "a", rewardEpoch: 10 },
+          { wallet: "b", rewardEpoch: 400 },
+        ],
+        500,
+      ),
+    ).toEqual(["a"]);
   });
   it("shuffles deterministically and preserves elements", () => {
     const xs = [1, 2, 3, 4, 5, 6];

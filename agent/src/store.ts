@@ -55,12 +55,18 @@ export class PgStore implements Store {
   constructor(private readonly db: pg.Pool) {}
 
   async recentPosts(mint: string, limit: number): Promise<string[]> {
-    const r = await this.db.query<{ body: string }>("select body from agent_posts where mint = $1 order by created_at desc limit $2", [mint, limit]);
+    const r = await this.db.query<{ body: string }>(
+      "select body from agent_posts where mint = $1 order by created_at desc limit $2",
+      [mint, limit],
+    );
     return r.rows.map((x) => x.body);
   }
 
   async startRun(mint: string, startedAt: Date): Promise<number> {
-    const r = await this.db.query<{ id: string }>("insert into agent_runs (mint, started_at) values ($1, $2) returning id", [mint, startedAt]);
+    const r = await this.db.query<{ id: string }>(
+      "insert into agent_runs (mint, started_at) values ($1, $2) returning id",
+      [mint, startedAt],
+    );
     return Number(r.rows[0]!.id);
   }
 
@@ -93,7 +99,16 @@ export class PgStore implements Store {
     const r = await this.db.query<{ id: string }>(
       `insert into agent_posts (mint, kind, body, snapshot, proposals, actions, run_id, model)
        values ($1, $2, $3, $4, $5, $6, $7, $8) returning id`,
-      [p.mint, p.kind, p.body, JSON.stringify(snapshot), JSON.stringify(p.proposals), JSON.stringify(p.actions), runId, p.model],
+      [
+        p.mint,
+        p.kind,
+        p.body,
+        JSON.stringify(snapshot),
+        JSON.stringify(p.proposals),
+        JSON.stringify(p.actions),
+        runId,
+        p.model,
+      ],
     );
     return Number(r.rows[0]!.id);
   }
@@ -105,11 +120,26 @@ export class PgStore implements Store {
   async insertProposals(mint: string, runId: number, postId: number, ds: Decision[]): Promise<void> {
     for (const d of ds) {
       // a newer proposal for the same parameter supersedes older open ones
-      await this.db.query("update agent_proposals set status='superseded', resolved_at=now() where mint=$1 and param=$2 and status='open'", [mint, d.param]);
+      await this.db.query(
+        "update agent_proposals set status='superseded', resolved_at=now() where mint=$1 and param=$2 and status='open'",
+        [mint, d.param],
+      );
       await this.db.query(
         `insert into agent_proposals (mint, run_id, post_id, param, current_value, proposed_value, bound_min, bound_max, tunable, reason, rationale)
          values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-        [mint, runId, postId, d.param, d.current || null, d.requested, d.bound?.min ?? null, d.bound?.max ?? null, d.bound?.enabled ?? false, d.reason, d.rationale],
+        [
+          mint,
+          runId,
+          postId,
+          d.param,
+          d.current || null,
+          d.requested,
+          d.bound?.min ?? null,
+          d.bound?.max ?? null,
+          d.bound?.enabled ?? false,
+          d.reason,
+          d.rationale,
+        ],
       );
     }
   }
@@ -130,7 +160,16 @@ export class MemoryStore implements Store {
   }
   async startRun(mint: string, startedAt: Date) {
     const id = this.runs.length + 1;
-    this.runs.push({ id, mint, startedAt, finishedAt: startedAt, ok: false, dryRun: true, requestedModel: "", promptVersion: "" });
+    this.runs.push({
+      id,
+      mint,
+      startedAt,
+      finishedAt: startedAt,
+      ok: false,
+      dryRun: true,
+      requestedModel: "",
+      promptVersion: "",
+    });
     return id;
   }
   async finishRun(id: number, r: RunRecord, postId?: number) {

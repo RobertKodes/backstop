@@ -52,7 +52,13 @@ export function paramVariant(index: number): Record<string, Record<string, never
   return { [def.name]: {} };
 }
 
-export async function buildSetParamIx(programs: Programs, agent: PublicKey, mint: PublicKey, index: number, value: bigint): Promise<TransactionInstruction> {
+export async function buildSetParamIx(
+  programs: Programs,
+  agent: PublicKey,
+  mint: PublicKey,
+  index: number,
+  value: bigint,
+): Promise<TransactionInstruction> {
   return programs.core.methods
     .agentSetParam(paramVariant(index) as never, new BN(value.toString()))
     .accountsPartial({ agent, market: pda.market(mint), agentAuthority: pda.agent(mint) })
@@ -80,7 +86,12 @@ export class SolanaChain implements Chain {
       ? {
           agent: a.agent.toBase58(),
           cooldownSecs: Number(a.cooldownSecs.toString()),
-          bounds: a.bounds.map((b) => ({ enabled: b.enabled, min: big(b.min), max: big(b.max), lastUpdate: Number(b.lastUpdate.toString()) })),
+          bounds: a.bounds.map((b) => ({
+            enabled: b.enabled,
+            min: big(b.min),
+            max: big(b.max),
+            lastUpdate: Number(b.lastUpdate.toString()),
+          })),
         }
       : null;
     return { params, authority };
@@ -94,15 +105,24 @@ export class SolanaChain implements Chain {
       ix,
     ];
     const { blockhash, lastValidBlockHeight } = await this.connection.getLatestBlockhash("confirmed");
-    const msg = new TransactionMessage({ payerKey: this.agent.publicKey, recentBlockhash: blockhash, instructions: ixs }).compileToV0Message();
+    const msg = new TransactionMessage({
+      payerKey: this.agent.publicKey,
+      recentBlockhash: blockhash,
+      instructions: ixs,
+    }).compileToV0Message();
     const tx = new VersionedTransaction(msg);
     tx.sign([this.agent]);
     const sim = await this.connection.simulateTransaction(tx, { sigVerify: false, commitment: "confirmed" });
-    if (sim.value.err) throw new Error(`simulation failed: ${JSON.stringify(sim.value.err)} ${(sim.value.logs ?? []).slice(-4).join(" | ")}`);
+    if (sim.value.err)
+      throw new Error(
+        `simulation failed: ${JSON.stringify(sim.value.err)} ${(sim.value.logs ?? []).slice(-4).join(" | ")}`,
+      );
     const sig = await this.connection.sendRawTransaction(tx.serialize(), { skipPreflight: true, maxRetries: 3 });
-    const conf = await this.connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+    const conf = await this.connection.confirmTransaction(
+      { signature: sig, blockhash, lastValidBlockHeight },
+      "confirmed",
+    );
     if (conf.value.err) throw new Error(`transaction failed: ${JSON.stringify(conf.value.err)}`);
     return sig;
   }
 }
-

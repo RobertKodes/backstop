@@ -21,7 +21,13 @@ describe.skipIf(!url)("agent snapshot + store (integration)", () => {
     await db.query("drop schema public cascade; create schema public;");
     await migrate(db);
     for (const [i, t] of fx.txs.entries()) {
-      await ingestTx(db, null, { signature: t.signature, slot: t.slot, blockTime: t0 + i * 60, logs: t.logs, failed: false });
+      await ingestTx(db, null, {
+        signature: t.signature,
+        slot: t.slot,
+        blockTime: t0 + i * 60,
+        logs: t.logs,
+        failed: false,
+      });
     }
   });
   afterAll(async () => db.end());
@@ -30,7 +36,10 @@ describe.skipIf(!url)("agent snapshot + store (integration)", () => {
     // events carry the on-chain clock of the fixture run; take the snapshot as of its end
     const { rows } = await db.query<{ t: Date }>("select max(ts) as t from prices");
     const asOf = new Date(rows[0]!.t.getTime() + 60_000);
-    const s = await new PgSnapshotSource(db).build({ mint: fx.mint, quoteSymbol: "USDC", quoteDecimals: 6, tokenDecimals: 9 }, asOf);
+    const s = await new PgSnapshotSource(db).build(
+      { mint: fx.mint, quoteSymbol: "USDC", quoteDecimals: 6, tokenDecimals: 9 },
+      asOf,
+    );
     expect(s.offers.created).toBe(1);
     expect(s.offers.settled).toBe(1);
     expect(s.offers.absorptionRate).toBeGreaterThan(0);
@@ -74,18 +83,22 @@ describe.skipIf(!url)("agent snapshot + store (integration)", () => {
       });
       await store.insertProposals(fx.mint, run, post, [decision]);
       await store.markPosted(post, `x${i}`);
-      await store.finishRun(run, {
-        mint: fx.mint,
-        startedAt: new Date(),
-        finishedAt: new Date(),
-        ok: true,
-        dryRun: true,
-        requestedModel: "claude-opus-5-5",
-        servedModel: "claude-opus-5-5",
-        requestId: "req",
-        promptVersion: "v",
-        usage: { inputTokens: 10, outputTokens: 5, cacheReadTokens: 0 },
-      }, post);
+      await store.finishRun(
+        run,
+        {
+          mint: fx.mint,
+          startedAt: new Date(),
+          finishedAt: new Date(),
+          ok: true,
+          dryRun: true,
+          requestedModel: "claude-opus-5-5",
+          servedModel: "claude-opus-5-5",
+          requestId: "req",
+          promptVersion: "v",
+          usage: { inputTokens: 10, outputTokens: 5, cacheReadTokens: 0 },
+        },
+        post,
+      );
     }
     expect(await store.recentPosts(fx.mint, 5)).toEqual(["post 1", "post 0"]);
     const props = await db.query("select status from agent_proposals order by id");

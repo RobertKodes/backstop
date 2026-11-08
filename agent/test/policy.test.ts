@@ -41,7 +41,9 @@ function authority(overrides: Record<string, { min: bigint; max: bigint; lastUpd
     cooldownSecs: 3_600,
     bounds: PARAMS.map((p) => {
       const o = overrides[p.name];
-      return o ? { enabled: true, min: o.min, max: o.max, lastUpdate: o.lastUpdate ?? 0 } : { enabled: false, min: 0n, max: 0n, lastUpdate: 0 };
+      return o
+        ? { enabled: true, min: o.min, max: o.max, lastUpdate: o.lastUpdate ?? 0 }
+        : { enabled: false, min: 0n, max: 0n, lastUpdate: 0 };
     }),
   };
 }
@@ -56,7 +58,12 @@ const auth = authority({
 describe("policy gate", () => {
   it("executes in-bounds proposals for agent-tunable parameters", () => {
     const [d] = decide([{ param: "yieldBufferBps", value: "2200", rationale: "r" }], current(), auth, opts);
-    expect(d).toMatchObject({ kind: "execute", value: "2200", clamped: false, paramIndex: paramIndex("yieldBufferBps") });
+    expect(d).toMatchObject({
+      kind: "execute",
+      value: "2200",
+      clamped: false,
+      paramIndex: paramIndex("yieldBufferBps"),
+    });
   });
 
   it("routes non-tunable and out-of-bounds proposals to governance", () => {
@@ -84,14 +91,20 @@ describe("policy gate", () => {
     const a = authority({ yieldBufferBps: { min: 1_500n, max: 3_000n, lastUpdate: NOW - 600 } });
     const [d] = decide([{ param: "yieldBufferBps", value: "2100", rationale: "r" }], current(), a, opts);
     expect(d!.kind).toBe("deferred");
-    const [later] = decide([{ param: "yieldBufferBps", value: "2100", rationale: "r" }], current(), a, { ...opts, now: NOW + 3_000 });
+    const [later] = decide([{ param: "yieldBufferBps", value: "2100", rationale: "r" }], current(), a, {
+      ...opts,
+      now: NOW + 3_000,
+    });
     expect(later!.kind).toBe("execute");
   });
 
   it("rejects values that break cross-parameter invariants", () => {
     const a = authority({ baseDiscountBps: { min: 100n, max: 800n } });
     // base below minDiscountBps (200) violates min ≤ base ≤ max
-    const [d] = decide([{ param: "baseDiscountBps", value: "150", rationale: "r" }], current(), a, { ...opts, maxStepBps: 10_000 });
+    const [d] = decide([{ param: "baseDiscountBps", value: "150", rationale: "r" }], current(), a, {
+      ...opts,
+      maxStepBps: 10_000,
+    });
     expect(d!.kind).toBe("rejected");
     expect(d!.reason).toMatch(/minDiscountBps must be ≤ baseDiscountBps/);
   });
@@ -111,7 +124,15 @@ describe("policy gate", () => {
       auth,
       opts,
     );
-    expect(ds.map((d) => d.kind)).toEqual(["execute", "execute", "deferred", "rejected", "rejected", "rejected", "rejected"]);
+    expect(ds.map((d) => d.kind)).toEqual([
+      "execute",
+      "execute",
+      "deferred",
+      "rejected",
+      "rejected",
+      "rejected",
+      "rejected",
+    ]);
     expect(ds[2]!.reason).toMatch(/action cap/);
   });
 

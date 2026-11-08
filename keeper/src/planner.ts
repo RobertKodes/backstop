@@ -89,7 +89,11 @@ export function chunkPlan(total: bigint, maxChunk: bigint): bigint[] {
 }
 
 /** Holders whose last reward checkpoint is about to leave the 512-epoch ring. */
-export function holdersToCheckpoint(holders: { wallet: string; rewardEpoch: number }[], currentEpoch: number, threshold = 300): string[] {
+export function holdersToCheckpoint(
+  holders: { wallet: string; rewardEpoch: number }[],
+  currentEpoch: number,
+  threshold = 300,
+): string[] {
   return holders.filter((h) => currentEpoch - h.rewardEpoch > threshold).map((h) => h.wallet);
 }
 

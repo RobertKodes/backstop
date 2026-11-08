@@ -3,10 +3,7 @@
 // `programs/backstop-launchpad` (one transaction per step, enforced order).
 
 import BN from "bn.js";
-import {
-  createAssociatedTokenAccountIdempotentInstruction,
-  createSyncNativeInstruction,
-} from "@solana/spl-token";
+import { createAssociatedTokenAccountIdempotentInstruction, createSyncNativeInstruction } from "@solana/spl-token";
 import {
   ComputeBudgetProgram,
   type Connection,
@@ -74,14 +71,19 @@ export function validateLaunchParams(p: LaunchParams): string[] {
   if (!p.name.trim() || bytes(p.name) > 32) errs.push("Name must be 1–32 bytes.");
   if (!p.symbol.trim() || bytes(p.symbol) > 10) errs.push("Symbol must be 1–10 bytes.");
   if (bytes(p.uri) > 200) errs.push("Metadata URI must be at most 200 bytes.");
-  if (p.supply < 10_000n || p.supply > 18_000_000_000_000_000_000n) errs.push("Supply must be at least 10,000 base units and fit in u64.");
-  if (!Number.isInteger(p.creatorBps) || p.creatorBps < 0 || p.creatorBps > CHILD_MAX_CREATOR_BPS) errs.push("Creator allocation must be between 0% and 5%.");
+  if (p.supply < 10_000n || p.supply > 18_000_000_000_000_000_000n)
+    errs.push("Supply must be at least 10,000 base units and fit in u64.");
+  if (!Number.isInteger(p.creatorBps) || p.creatorBps < 0 || p.creatorBps > CHILD_MAX_CREATOR_BPS)
+    errs.push("Creator allocation must be between 0% and 5%.");
   if (p.liquidityLamports < CHILD_MIN_LIQUIDITY_LAMPORTS) errs.push("Initial liquidity must be at least 5 SOL.");
   return errs;
 }
 
 /** Linear vesting (mirror of `ChildLaunch::vested`). */
-export function vestedAmount(info: Pick<ChildInfo, "creatorAmount" | "vestingStart" | "vestingEnd">, now: number): bigint {
+export function vestedAmount(
+  info: Pick<ChildInfo, "creatorAmount" | "vestingStart" | "vestingEnd">,
+  now: number,
+): bigint {
   if (info.vestingEnd <= info.vestingStart || info.vestingStart === 0) return 0n;
   if (now <= info.vestingStart) return 0n;
   if (now >= info.vestingEnd) return info.creatorAmount;
@@ -148,7 +150,12 @@ export class LaunchpadClient implements LaunchpadApi {
   }
 
   /** Build every step after `status` (exclusive). */
-  private async stepsFrom(status: ChildStatus, creator: PublicKey, mint: PublicKey, liquidity: bigint): Promise<LaunchStep[]> {
+  private async stepsFrom(
+    status: ChildStatus,
+    creator: PublicKey,
+    mint: PublicKey,
+    liquidity: bigint,
+  ): Promise<LaunchStep[]> {
     const lp = this.programs.launchpad;
     const order = CHILD_STATUSES.indexOf(status);
     const steps: LaunchStep[] = [];
@@ -378,4 +385,3 @@ export class LaunchpadClient implements LaunchpadApi {
     return out.sort((x, y) => y.vestingStart - x.vestingStart);
   }
 }
-

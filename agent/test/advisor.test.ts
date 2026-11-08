@@ -8,18 +8,29 @@ import { snapshot } from "./fixtures.js";
 
 const OUTPUT: AgentOutput = {
   assessment: "Absorption is healthy; idle share is near target.",
-  proposals: [{ param: "yieldBufferBps", value: "2200", rationale: "Offers absorbed 33,000 USDC from chests vs 80,000 idle." }],
+  proposals: [
+    { param: "yieldBufferBps", value: "2200", rationale: "Offers absorbed 33,000 USDC from chests vs 80,000 idle." },
+  ],
   post: "22 offers in 24h, 71% absorbed by holders and the Shield.",
   feed: "Quiet day. Proposing a slightly larger idle buffer.",
 };
 
-function fakeClient(respond: (req: { url: string; headers: Headers; body: Record<string, unknown> }) => { status: number; json: unknown }) {
+function fakeClient(
+  respond: (req: { url: string; headers: Headers; body: Record<string, unknown> }) => { status: number; json: unknown },
+) {
   const seen: { url: string; headers: Headers; body: Record<string, unknown> }[] = [];
   const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {
-    const req = { url: String(url), headers: new Headers(init?.headers), body: JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown> };
+    const req = {
+      url: String(url),
+      headers: new Headers(init?.headers),
+      body: JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>,
+    };
     seen.push(req);
     const r = respond(req);
-    return new Response(JSON.stringify(r.json), { status: r.status, headers: { "content-type": "application/json", "request-id": "req_test_1" } });
+    return new Response(JSON.stringify(r.json), {
+      status: r.status,
+      headers: { "content-type": "application/json", "request-id": "req_test_1" },
+    });
   };
   const client = new Anthropic({ apiKey: "test-key", fetch: fetchImpl as typeof fetch, maxRetries: 0 });
   return { client, seen };
@@ -38,7 +49,13 @@ const message = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-const input = { snapshot: snapshot(), paramTable: "yieldBufferBps = 2000 bps", recentPosts: ["previous post"], maxActions: 2, maxStepBps: 2_500 };
+const input = {
+  snapshot: snapshot(),
+  paramTable: "yieldBufferBps = 2000 bps",
+  recentPosts: ["previous post"],
+  maxActions: 2,
+  maxStepBps: 2_500,
+};
 
 describe("ClaudeAdvisor", () => {
   it("sends a structured-output request with server-side fallbacks and parses the reply", async () => {
@@ -57,7 +74,10 @@ describe("ClaudeAdvisor", () => {
     expect(req.body.model).toBe("claude-opus-5-5");
     expect(req.body.fallbacks).toBe("default");
     expect(req.body.thinking).toBeUndefined();
-    const oc = req.body.output_config as { effort: string; format: { type: string; schema: { properties: Record<string, unknown> } } };
+    const oc = req.body.output_config as {
+      effort: string;
+      format: { type: string; schema: { properties: Record<string, unknown> } };
+    };
     expect(oc.effort).toBe("high");
     expect(oc.format.type).toBe("json_schema");
     expect(Object.keys(oc.format.schema.properties).sort()).toEqual(["assessment", "feed", "post", "proposals"]);
@@ -77,13 +97,23 @@ describe("ClaudeAdvisor", () => {
 
   it("turns refusals, truncation and API errors into AdvisorError", async () => {
     const cases: [unknown, number, string][] = [
-      [message({ content: [], stop_reason: "refusal", stop_details: { type: "refusal", category: null, explanation: null } }), 200, "refusal"],
+      [
+        message({
+          content: [],
+          stop_reason: "refusal",
+          stop_details: { type: "refusal", category: null, explanation: null },
+        }),
+        200,
+        "refusal",
+      ],
       [message({ stop_reason: "max_tokens", content: [{ type: "text", text: '{"assess' }] }), 200, "max_tokens"],
       [{ type: "error", error: { type: "invalid_request_error", message: "bad" } }, 400, "api"],
     ];
     for (const [json, status, code] of cases) {
       const { client } = fakeClient(() => ({ status, json }));
-      const err = await new ClaudeAdvisor(client, { model: "claude-opus-5-5", effort: "high" }).advise(input).catch((e: unknown) => e);
+      const err = await new ClaudeAdvisor(client, { model: "claude-opus-5-5", effort: "high" })
+        .advise(input)
+        .catch((e: unknown) => e);
       expect(err).toBeInstanceOf(AdvisorError);
       expect((err as AdvisorError).code).toBe(code);
     }

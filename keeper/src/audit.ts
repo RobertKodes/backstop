@@ -13,7 +13,17 @@ export class PgAudit implements Audit {
     await this.db.query(
       `insert into keeper_runs (job, started_at, finished_at, ok, signature, pre_state_hash, post_state_hash, detail, error)
        values ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      [e.job, e.startedAt, e.finishedAt, e.ok, e.signature ?? null, e.preStateHash ?? null, e.postStateHash ?? null, e.detail ?? {}, e.error ?? null],
+      [
+        e.job,
+        e.startedAt,
+        e.finishedAt,
+        e.ok,
+        e.signature ?? null,
+        e.preStateHash ?? null,
+        e.postStateHash ?? null,
+        e.detail ?? {},
+        e.error ?? null,
+      ],
     );
   }
 }

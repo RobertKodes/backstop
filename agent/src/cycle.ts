@@ -53,7 +53,13 @@ export async function runCycle(deps: CycleDeps, market: MarketMeta & { mintKey: 
   const now = deps.now?.() ?? new Date();
   const startedAt = new Date();
   const runId = await store.startRun(market.mint, startedAt);
-  const base = { mint: market.mint, startedAt, dryRun: cfg.dryRun, requestedModel: cfg.model, promptVersion: PROMPT_VERSION };
+  const base = {
+    mint: market.mint,
+    startedAt,
+    dryRun: cfg.dryRun,
+    requestedModel: cfg.model,
+    promptVersion: PROMPT_VERSION,
+  };
   const fail = async (errorCode: string, error: string, extra: object = {}): Promise<CycleResult> => {
     log.error({ mint: market.mint, runId, errorCode, error, ...extra }, "agent cycle failed");
     await store.finishRun(runId, { ...base, ...extra, finishedAt: new Date(), ok: false, errorCode, error });
@@ -69,7 +75,10 @@ export async function runCycle(deps: CycleDeps, market: MarketMeta & { mintKey: 
   }
   let authority = state.authority;
   if (authority && authority.agent !== cfg.agent) {
-    log.warn({ mint: market.mint, onChain: authority.agent, ours: cfg.agent }, "agent key is not the on-chain agent; nothing will execute");
+    log.warn(
+      { mint: market.mint, onChain: authority.agent, ours: cfg.agent },
+      "agent key is not the on-chain agent; nothing will execute",
+    );
     authority = { ...authority, bounds: authority.bounds.map((b) => ({ ...b, enabled: false })) };
   }
   const auth = authority ?? { agent: "", cooldownSecs: 3_600, bounds: [] };
@@ -90,15 +99,24 @@ export async function runCycle(deps: CycleDeps, market: MarketMeta & { mintKey: 
       maxStepBps: cfg.maxStepBps,
     });
   } catch (e) {
-    if (e instanceof AdvisorError) return fail(e.code, e.message, e.detail ? { servedModel: String(e.detail.model ?? "") || undefined } : {});
+    if (e instanceof AdvisorError)
+      return fail(e.code, e.message, e.detail ? { servedModel: String(e.detail.model ?? "") || undefined } : {});
     return fail("api", (e as Error).message);
   }
   const { output } = advice;
 
   // 4. policy gate
-  let decisions = decide(output.proposals, state.params, auth, { now: nowSecs, maxActions: cfg.maxActions, maxStepBps: cfg.maxStepBps });
+  let decisions = decide(output.proposals, state.params, auth, {
+    now: nowSecs,
+    maxActions: cfg.maxActions,
+    maxStepBps: cfg.maxStepBps,
+  });
   if (isThin(snapshot)) {
-    decisions = decisions.map((d) => (d.kind === "execute" || d.kind === "governance" ? { ...d, kind: "rejected", reason: "insufficient activity in the window" } : d));
+    decisions = decisions.map((d) =>
+      d.kind === "execute" || d.kind === "governance"
+        ? { ...d, kind: "rejected", reason: "insufficient activity in the window" }
+        : d,
+    );
   }
 
   // 5. execute bounded updates
@@ -113,7 +131,10 @@ export async function runCycle(deps: CycleDeps, market: MarketMeta & { mintKey: 
     try {
       const signature = await chain.setParam(market.mintKey, d.paramIndex, BigInt(d.value));
       actions.push({ param: d.param, value: d.value, status: "sent", signature });
-      log.info({ mint: market.mint, param: d.param, from: d.current, to: d.value, signature }, "agent parameter update sent");
+      log.info(
+        { mint: market.mint, param: d.param, from: d.current, to: d.value, signature },
+        "agent parameter update sent",
+      );
     } catch (e) {
       actions.push({ param: d.param, value: d.value, status: "failed", error: (e as Error).message });
       log.error({ mint: market.mint, param: d.param, err: (e as Error).message }, "agent parameter update failed");
@@ -153,7 +174,9 @@ export async function runCycle(deps: CycleDeps, market: MarketMeta & { mintKey: 
     return fail("store", (e as Error).message);
   }
   if (gov.length && deps.notifyGovernance) {
-    await deps.notifyGovernance(market.mint, gov).catch((e: Error) => log.warn({ err: e.message }, "governance notification failed"));
+    await deps
+      .notifyGovernance(market.mint, gov)
+      .catch((e: Error) => log.warn({ err: e.message }, "governance notification failed"));
   }
 
   // 8. X (feature-flagged)
@@ -172,11 +195,25 @@ export async function runCycle(deps: CycleDeps, market: MarketMeta & { mintKey: 
 
   await store.finishRun(
     runId,
-    { ...base, finishedAt: new Date(), ok: true, servedModel: advice.model, requestId: advice.requestId, usage: advice.usage },
+    {
+      ...base,
+      finishedAt: new Date(),
+      ok: true,
+      servedModel: advice.model,
+      requestId: advice.requestId,
+      usage: advice.usage,
+    },
     postId,
   );
   log.info(
-    { mint: market.mint, runId, postId, executed: actions.filter((a) => a.status === "sent").length, governance: gov.length, servedModel: advice.model },
+    {
+      mint: market.mint,
+      runId,
+      postId,
+      executed: actions.filter((a) => a.status === "sent").length,
+      governance: gov.length,
+      servedModel: advice.model,
+    },
     "agent cycle complete",
   );
   return { runId, ok: true, postId, decisions, actions, xPostId };
@@ -188,11 +225,13 @@ export function outcomeLines(decisions: Decision[], actions: Action[]): string {
   for (const a of actions) {
     const d = decisions.find((x) => x.param === a.param);
     const from = d?.current ?? "?";
-    if (a.status === "sent") lines.push(`Applied on-chain: ${a.param} ${from} → ${a.value}${d?.clamped ? " (step-limited)" : ""}.`);
+    if (a.status === "sent")
+      lines.push(`Applied on-chain: ${a.param} ${from} → ${a.value}${d?.clamped ? " (step-limited)" : ""}.`);
     if (a.status === "dry_run") lines.push(`Dry run (not sent): ${a.param} ${from} → ${a.value}.`);
     if (a.status === "failed") lines.push(`Not applied: ${a.param} (transaction failed).`);
     if (a.status === "deferred") lines.push(`Deferred: ${a.param} (${a.error ?? "cooldown"}).`);
   }
-  for (const d of decisions.filter((x) => x.kind === "governance")) lines.push(`Filed for governance review: ${d.param} → ${d.requested} (${d.reason}).`);
+  for (const d of decisions.filter((x) => x.kind === "governance"))
+    lines.push(`Filed for governance review: ${d.param} → ${d.requested} (${d.reason}).`);
   return lines.join("\n");
 }

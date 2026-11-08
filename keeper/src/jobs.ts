@@ -27,7 +27,9 @@ import { autoBidAmount, chunkPlan, holdersToCheckpoint, nextOfferAction, shuffle
 import type { Sender } from "./tx.js";
 
 const disc = (program: keyof typeof IDLS, name: string) => {
-  const acc = (IDLS[program] as unknown as { accounts: { name: string; discriminator: number[] }[] }).accounts.find((a) => a.name === name);
+  const acc = (IDLS[program] as unknown as { accounts: { name: string; discriminator: number[] }[] }).accounts.find(
+    (a) => a.name === name,
+  );
   if (!acc) throw new Error(`no account ${name}`);
   return bs58.encode(Buffer.from(acc.discriminator));
 };
@@ -80,10 +82,17 @@ export async function settleOffers(c: JobContext): Promise<number> {
         await c.sender.send([await client.closeBiddingIx(id)], { job: "offers.close", detail });
         break;
       case "settle":
-        await c.sender.send([await client.settleIx(id, keeperKey(c))], { job: "offers.settle", detail, computeUnits: 800_000 });
+        await c.sender.send([await client.settleIx(id, keeperKey(c))], {
+          job: "offers.settle",
+          detail,
+          computeUnits: 800_000,
+        });
         break;
       case "sellRemainder":
-        await c.sender.send([...(await client.catchUpIxs()), await client.sellRemainderIx(id, keeperKey(c))], { job: "offers.remainder", detail });
+        await c.sender.send([...(await client.catchUpIxs()), await client.sellRemainderIx(id, keeperKey(c))], {
+          job: "offers.remainder",
+          detail,
+        });
         break;
       case "claim":
         await claimAll(c, pubkey, id);
@@ -106,7 +115,15 @@ async function claimAll(c: JobContext, offer: PublicKey, id: bigint) {
   });
   for (const { account } of bids) {
     const b = client.programs.offers.coder.accounts.decode("bid", account.data);
-    const pre = [createAssociatedTokenAccountIdempotentInstruction(keeperKey(c), client.tokenAta(b.bidder), b.bidder, client.mint, TOKEN_2022)];
+    const pre = [
+      createAssociatedTokenAccountIdempotentInstruction(
+        keeperKey(c),
+        client.tokenAta(b.bidder),
+        b.bidder,
+        client.mint,
+        TOKEN_2022,
+      ),
+    ];
     const ix = await client.claimIx(id, b.bidder, b.kind, keeperKey(c));
     await c.sender.send([...(await client.catchUpIxs()), ...pre, ix], {
       job: "offers.claim",
@@ -182,8 +199,18 @@ export async function autoAbsorb(c: JobContext): Promise<number> {
 const sighash = (name: string) => createHash("sha256").update(`global:${name}`).digest().subarray(0, 8);
 
 /** Localnet stand-in for a Jupiter route: mock_swap.swap with the PDA as user. */
-export function mockSwapRoute(owner: PublicKey, mintIn: PublicKey, mintOut: PublicKey, userIn: PublicKey, userOut: PublicKey, amount: bigint) {
-  const pool = PublicKey.findProgramAddressSync([Buffer.from("mock_pool"), mintIn.toBuffer(), mintOut.toBuffer()], PROGRAM_IDS.mockSwap)[0];
+export function mockSwapRoute(
+  owner: PublicKey,
+  mintIn: PublicKey,
+  mintOut: PublicKey,
+  userIn: PublicKey,
+  userOut: PublicKey,
+  amount: bigint,
+) {
+  const pool = PublicKey.findProgramAddressSync(
+    [Buffer.from("mock_pool"), mintIn.toBuffer(), mintOut.toBuffer()],
+    PROGRAM_IDS.mockSwap,
+  )[0];
   const accounts: AccountMeta[] = [
     { pubkey: owner, isSigner: false, isWritable: false },
     { pubkey: pool, isSigner: false, isWritable: false },
@@ -196,7 +223,11 @@ export function mockSwapRoute(owner: PublicKey, mintIn: PublicKey, mintOut: Publ
     { pubkey: TOKEN_PROGRAM, isSigner: false, isWritable: false },
     { pubkey: TOKEN_PROGRAM, isSigner: false, isWritable: false },
   ];
-  const data = Buffer.concat([sighash("swap"), new BN(amount.toString()).toArrayLike(Buffer, "le", 8), Buffer.alloc(8)]);
+  const data = Buffer.concat([
+    sighash("swap"),
+    new BN(amount.toString()).toArrayLike(Buffer, "le", 8),
+    Buffer.alloc(8),
+  ]);
   return { accounts, data };
 }
 
@@ -205,9 +236,14 @@ export async function fees(c: JobContext): Promise<void> {
   const market = await client.fetchMarket();
   const feeBal = (await client.connection.getTokenAccountBalance(market.feeVault)).value.amount;
   if (BigInt(feeBal) >= cfg.distributeMin) {
-    await c.sender.send([...(await client.catchUpIxs()), await client.distributeFeesIx()], { job: "fees.distribute", detail: { amount: feeBal } });
+    await c.sender.send([...(await client.catchUpIxs()), await client.distributeFeesIx()], {
+      job: "fees.distribute",
+      detail: { amount: feeBal },
+    });
   }
-  await c.sender.send([await client.syncShieldRewardsIx()], { job: "fees.syncShield", retries: 0 }).catch(() => undefined);
+  await c.sender
+    .send([await client.syncShieldRewardsIx()], { job: "fees.syncShield", retries: 0 })
+    .catch(() => undefined);
 
   // Treasury share → SOL (TWAP-chunked; on-chain oracle bound enforces ≤ 0.5 % slippage).
   const tBal = BigInt((await client.connection.getTokenAccountBalance(market.treasuryQuoteVault)).value.amount);
@@ -225,7 +261,10 @@ export async function fees(c: JobContext): Promise<void> {
     const r = await jup.route(q, treasury, tempWsol);
     route = { accounts: r.accounts, data: r.data, lookupTables: r.lookupTables };
   } else if (market.swapProgram.equals(PROGRAM_IDS.mockSwap)) {
-    route = { ...mockSwapRoute(treasury, client.quote, WSOL, market.treasuryQuoteVault, tempWsol, chunk), lookupTables: [] };
+    route = {
+      ...mockSwapRoute(treasury, client.quote, WSOL, market.treasuryQuoteVault, tempWsol, chunk),
+      lookupTables: [],
+    };
   } else {
     c.log.info("treasury conversion skipped (no swap route configured)");
     return;
@@ -288,9 +327,16 @@ export async function parentShare(c: JobContext): Promise<void> {
     const jup = new JupiterClient(cfg.jupiterUrl);
     const q = await jup.quote(client.quote, parent.quoteMint, chunk, cfg.slippageBps);
     const r = await jup.route(q, childMarket, parent.holderRewardsVault);
-    route = { accounts: rewriteRouteSource(r.accounts, ataClassic(childMarket, client.quote), parentVault), data: r.data, lookupTables: r.lookupTables };
+    route = {
+      accounts: rewriteRouteSource(r.accounts, ataClassic(childMarket, client.quote), parentVault),
+      data: r.data,
+      lookupTables: r.lookupTables,
+    };
   } else if (market.swapProgram.equals(PROGRAM_IDS.mockSwap)) {
-    route = { ...mockSwapRoute(childMarket, client.quote, parent.quoteMint, parentVault, parent.holderRewardsVault, chunk), lookupTables: [] };
+    route = {
+      ...mockSwapRoute(childMarket, client.quote, parent.quoteMint, parentVault, parent.holderRewardsVault, chunk),
+      lookupTables: [],
+    };
   } else {
     c.log.info("parent-share conversion skipped (no swap route configured)");
     return;
@@ -336,7 +382,10 @@ export async function shieldLamports(c: JobContext): Promise<void> {
     const r = await jup.route(q, treasury, market.shieldRewardsVault);
     route = { accounts: r.accounts, data: r.data, lookupTables: r.lookupTables };
   } else if (market.swapProgram.equals(PROGRAM_IDS.mockSwap)) {
-    route = { ...mockSwapRoute(treasury, WSOL, client.quote, tempWsol, market.shieldRewardsVault, pending), lookupTables: [] };
+    route = {
+      ...mockSwapRoute(treasury, WSOL, client.quote, tempWsol, market.shieldRewardsVault, pending),
+      lookupTables: [],
+    };
   } else {
     c.log.info("shield lamports conversion skipped (no swap route configured)");
     return;
@@ -358,7 +407,12 @@ export async function shieldLamports(c: JobContext): Promise<void> {
     } as never)
     .remainingAccounts(route.accounts)
     .instruction();
-  await c.sender.send([ix], { job: "fees.convertShieldLamports", detail: { lamports: pending.toString() }, computeUnits: 1_000_000, lookupTables: route.lookupTables });
+  await c.sender.send([ix], {
+    job: "fees.convertShieldLamports",
+    detail: { lamports: pending.toString() },
+    computeUnits: 1_000_000,
+    lookupTables: route.lookupTables,
+  });
 }
 
 // -------------------------------------------------- yield / epochs / snapshot
@@ -385,7 +439,10 @@ export async function epochs(c: JobContext): Promise<void> {
     dataSlice: { offset: 40, length: 72 },
   });
   const idle = holdersToCheckpoint(
-    holders.map((h) => ({ wallet: new PublicKey(h.account.data.subarray(0, 32)).toBase58(), rewardEpoch: Number(h.account.data.readBigUInt64LE(64)) })),
+    holders.map((h) => ({
+      wallet: new PublicKey(h.account.data.subarray(0, 32)).toBase58(),
+      rewardEpoch: Number(h.account.data.readBigUInt64LE(64)),
+    })),
     current,
   );
   for (let i = 0; i < idle.length; i += 8) {

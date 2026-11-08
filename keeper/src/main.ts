@@ -5,11 +5,22 @@ import pg from "pg";
 import { pino } from "pino";
 import { MemoryAudit, PgAudit } from "./audit.js";
 import { loadConfig } from "./config.js";
-import { autoAbsorb, epochs, fees, parentShare, rebalance, settleOffers, shieldLamports, snapshot, type JobContext } from "./jobs.js";
+import {
+  autoAbsorb,
+  epochs,
+  fees,
+  parentShare,
+  rebalance,
+  settleOffers,
+  shieldLamports,
+  snapshot,
+  type JobContext,
+} from "./jobs.js";
 import { Scheduler, webhookAlert } from "./scheduler.js";
 import { Sender } from "./tx.js";
 
-const escape = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+const escape = (s: string) =>
+  s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 async function main() {
   const cfg = loadConfig();
@@ -22,7 +33,11 @@ async function main() {
   log.info({ keeper: cfg.keeper.publicKey.toBase58(), markets: cfg.markets.length }, "keeper starting");
 
   for (const market of cfg.markets) {
-    const client = new MarketClient(conn, { mint: market.mint, quoteMint: market.quoteMint, quoteTokenProgram: market.quoteTokenProgram });
+    const client = new MarketClient(conn, {
+      mint: market.mint,
+      quoteMint: market.quoteMint,
+      quoteTokenProgram: market.quoteTokenProgram,
+    });
     const ctx: JobContext = { cfg, market, client, sender, log: log.child({ mint: market.mint.toBase58() }) };
     const m = market.mint.toBase58().slice(0, 6);
     sched.add(`${m}:settle`, 5_000, () => settleOffers(ctx));
@@ -52,7 +67,10 @@ async function main() {
     const recent = memory.entries
       .slice(-25)
       .reverse()
-      .map((e) => `<tr><td>${escape(e.job)}</td><td>${e.ok ? "✓" : "✗"}</td><td>${escape(e.signature ?? "")}</td><td>${escape(e.preStateHash?.slice(0, 12) ?? "")}→${escape(e.postStateHash?.slice(0, 12) ?? "")}</td></tr>`)
+      .map(
+        (e) =>
+          `<tr><td>${escape(e.job)}</td><td>${e.ok ? "✓" : "✗"}</td><td>${escape(e.signature ?? "")}</td><td>${escape(e.preStateHash?.slice(0, 12) ?? "")}→${escape(e.postStateHash?.slice(0, 12) ?? "")}</td></tr>`,
+      )
       .join("");
     reply.type("text/html").send(`<!doctype html><meta charset="utf-8"><title>BACKSTOP keeper</title>
 <style>body{font:14px system-ui;margin:24px;background:#0b0d10;color:#e6e6e6}table{border-collapse:collapse;margin-bottom:24px}td,th{border:1px solid #333;padding:4px 8px}</style>

@@ -45,7 +45,9 @@ export class Scheduler {
         st.lastError = e instanceof Error ? e.message : String(e);
         this.log.error({ job: name, err: st.lastError }, "job failed");
         if (st.consecutiveFailures === this.alertAfter) {
-          await this.alert(`keeper job ${name} failed ${this.alertAfter}× in a row: ${st.lastError}`).catch(() => undefined);
+          await this.alert(`keeper job ${name} failed ${this.alertAfter}× in a row: ${st.lastError}`).catch(
+            () => undefined,
+          );
         }
       } finally {
         st.running = false;
@@ -70,6 +72,10 @@ export function webhookAlert(url: string | undefined, log: Logger): Alert {
   return async (msg: string) => {
     log.warn({ alert: msg }, "ALERT");
     if (!url) return;
-    await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: msg, content: msg }) });
+    await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text: msg, content: msg }),
+    });
   };
 }

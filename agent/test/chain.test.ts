@@ -30,9 +30,9 @@ describe("agent_set_param instruction", () => {
   });
 
   it("matches the on-chain ParamId order", () => {
-    const enumType = (IDLS.core as unknown as { types: { name: string; type: { kind: string; variants?: { name: string }[] } }[] }).types.find(
-      (t) => t.name === "ParamId",
-    );
+    const enumType = (
+      IDLS.core as unknown as { types: { name: string; type: { kind: string; variants?: { name: string }[] } }[] }
+    ).types.find((t) => t.name === "ParamId");
     const variants = enumType!.type.variants!.map((v) => v.name.replace(/_(\w)/g, (_, c: string) => c.toUpperCase()));
     expect(variants.map((v) => v[0]!.toLowerCase() + v.slice(1))).toEqual(PARAMS.map((p) => p.name));
     expect(paramVariant(0)).toEqual({ tradeFeeBps: {} });
@@ -54,7 +54,10 @@ describe("X poster", () => {
   });
 
   it("surfaces API errors", async () => {
-    const fake = (async () => new Response(JSON.stringify({ title: "Forbidden", detail: "duplicate" }), { status: 403 })) as unknown as typeof fetch;
+    const fake = (async () =>
+      new Response(JSON.stringify({ title: "Forbidden", detail: "duplicate" }), {
+        status: 403,
+      })) as unknown as typeof fetch;
     await expect(new XApiPoster("tok", undefined, fake).post("x")).rejects.toThrow(/403.*Forbidden/);
   });
 

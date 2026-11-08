@@ -40,7 +40,12 @@ const Env = z.object({
   LOG_LEVEL: z.string().default("info"),
 });
 
-export type MarketCfg = { mint: PublicKey; quoteMint: PublicKey; quoteTokenProgram?: PublicKey; adapterAccounts: { pubkey: PublicKey; isSigner: false; isWritable: boolean }[] };
+export type MarketCfg = {
+  mint: PublicKey;
+  quoteMint: PublicKey;
+  quoteTokenProgram?: PublicKey;
+  adapterAccounts: { pubkey: PublicKey; isSigner: false; isWritable: boolean }[];
+};
 
 export interface Config {
   rpcUrl: string;
@@ -79,7 +84,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       mint: new PublicKey(m.mint),
       quoteMint: new PublicKey(m.quoteMint),
       quoteTokenProgram: m.quoteTokenProgram ? new PublicKey(m.quoteTokenProgram) : undefined,
-      adapterAccounts: m.adapterAccounts.map((a) => ({ pubkey: new PublicKey(a.pubkey), isSigner: false as const, isWritable: a.writable })),
+      adapterAccounts: m.adapterAccounts.map((a) => ({
+        pubkey: new PublicKey(a.pubkey),
+        isSigner: false as const,
+        isWritable: a.writable,
+      })),
     }));
   return {
     rpcUrl: e.RPC_URL,

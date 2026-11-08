@@ -90,16 +90,32 @@ export class Sender {
     for (let attempt = 0; attempt <= (opts.retries ?? 3); attempt++) {
       try {
         const { blockhash, lastValidBlockHeight } = await this.conn.getLatestBlockhash("confirmed");
-        const msg = new TransactionMessage({ payerKey: this.payer.publicKey, recentBlockhash: blockhash, instructions: [...budget, ...ixs] }).compileToV0Message(alts);
+        const msg = new TransactionMessage({
+          payerKey: this.payer.publicKey,
+          recentBlockhash: blockhash,
+          instructions: [...budget, ...ixs],
+        }).compileToV0Message(alts);
         const tx = new VersionedTransaction(msg);
         tx.sign([this.payer, ...signers]);
         const sim = await this.conn.simulateTransaction(tx, { sigVerify: false });
         if (sim.value.err) throw new SimulationError(JSON.stringify(sim.value.err), sim.value.logs ?? []);
         const sig = await this.conn.sendTransaction(tx, { skipPreflight: true, maxRetries: 2 });
-        const conf = await this.conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+        const conf = await this.conn.confirmTransaction(
+          { signature: sig, blockhash, lastValidBlockHeight },
+          "confirmed",
+        );
         if (conf.value.err) throw new Error(`tx failed: ${JSON.stringify(conf.value.err)}`);
         const post = await stateHash(this.conn, keys).catch(() => undefined);
-        await this.audit.record({ job: opts.job, startedAt, finishedAt: new Date(), ok: true, signature: sig, preStateHash: pre, postStateHash: post, detail: opts.detail });
+        await this.audit.record({
+          job: opts.job,
+          startedAt,
+          finishedAt: new Date(),
+          ok: true,
+          signature: sig,
+          preStateHash: pre,
+          postStateHash: post,
+          detail: opts.detail,
+        });
         return sig;
       } catch (e) {
         lastErr = e;
@@ -114,7 +130,10 @@ export class Sender {
       ok: false,
       preStateHash: pre,
       detail: opts.detail,
-      error: lastErr instanceof Error ? `${lastErr.message}\n${lastErr instanceof SimulationError ? lastErr.logs.slice(-8).join("\n") : ""}` : String(lastErr),
+      error:
+        lastErr instanceof Error
+          ? `${lastErr.message}\n${lastErr instanceof SimulationError ? lastErr.logs.slice(-8).join("\n") : ""}`
+          : String(lastErr),
     });
     throw lastErr;
   }

@@ -46,7 +46,9 @@ class FakeChain implements Chain {
         agent: this.agent,
         cooldownSecs: 3_600,
         bounds: PARAMS.map((p) =>
-          p.name === "yieldBufferBps" ? { enabled: true, min: 1_500n, max: 3_000n, lastUpdate: 0 } : { enabled: false, min: 0n, max: 0n, lastUpdate: 0 },
+          p.name === "yieldBufferBps"
+            ? { enabled: true, min: 1_500n, max: 3_000n, lastUpdate: 0 }
+            : { enabled: false, min: 0n, max: 0n, lastUpdate: 0 },
         ),
       },
     };
@@ -64,7 +66,12 @@ class FakeAdvisor implements Advisor {
   async advise(): Promise<Advice> {
     this.calls++;
     if (this.out instanceof Error) throw this.out;
-    return { output: this.out, model: "claude-opus-5-5", requestId: "req_1", usage: { inputTokens: 1, outputTokens: 1, cacheReadTokens: 0 } };
+    return {
+      output: this.out,
+      model: "claude-opus-5-5",
+      requestId: "req_1",
+      usage: { inputTokens: 1, outputTokens: 1, cacheReadTokens: 0 },
+    };
   }
 }
 
@@ -89,7 +96,9 @@ const OUTPUT: AgentOutput = {
   feed: "Holders absorbed most sells. Proposing yieldBufferBps 2200 and, for governance, a lower trade fee.",
 };
 
-function deps(over: Partial<CycleDeps> & { out?: AgentOutput | Error; snap?: Snapshot; xEnabled?: boolean; dryRun?: boolean } = {}) {
+function deps(
+  over: Partial<CycleDeps> & { out?: AgentOutput | Error; snap?: Snapshot; xEnabled?: boolean; dryRun?: boolean } = {},
+) {
   const chain = new FakeChain();
   const store = new MemoryStore();
   const poster = new FakePoster(over.xEnabled ?? false);
@@ -105,7 +114,14 @@ function deps(over: Partial<CycleDeps> & { out?: AgentOutput | Error; snap?: Sna
     notifyGovernance: async (_m, ds) => {
       governance.push(ds.map((x) => x.param));
     },
-    cfg: { model: "claude-opus-5-5", agent: AGENT, dryRun: over.dryRun ?? false, maxActions: 2, maxStepBps: 2_500, xSuffix: "" },
+    cfg: {
+      model: "claude-opus-5-5",
+      agent: AGENT,
+      dryRun: over.dryRun ?? false,
+      maxActions: 2,
+      maxStepBps: 2_500,
+      xSuffix: "",
+    },
     now: () => new Date("2026-11-08T12:00:00Z"),
     ...over,
   };
@@ -128,7 +144,12 @@ describe("agent cycle", () => {
     expect(post.snapshot).toEqual(snapshot());
     expect(post.feed).toContain("Applied on-chain: yieldBufferBps 2000 → 2200.");
     expect(post.feed).toContain("Filed for governance review: tradeFeeBps → 250");
-    expect(store.runs[0]).toMatchObject({ ok: true, servedModel: "claude-opus-5-5", requestId: "req_1", dryRun: false });
+    expect(store.runs[0]).toMatchObject({
+      ok: true,
+      servedModel: "claude-opus-5-5",
+      requestId: "req_1",
+      dryRun: false,
+    });
   });
 
   it("never sends transactions in dry-run mode", async () => {
@@ -168,7 +189,10 @@ describe("agent cycle", () => {
   });
 
   it("records failed runs without posting when the model refuses", async () => {
-    const { d, store, poster, chain } = deps({ out: new AdvisorError("refusal", "declined", { model: "claude-opus-5-5" }), xEnabled: true });
+    const { d, store, poster, chain } = deps({
+      out: new AdvisorError("refusal", "declined", { model: "claude-opus-5-5" }),
+      xEnabled: true,
+    });
     const r = await runCycle(d, market);
     expect(r).toMatchObject({ ok: false, errorCode: "refusal" });
     expect(store.posts).toEqual([]);

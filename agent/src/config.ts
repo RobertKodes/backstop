@@ -24,7 +24,10 @@ const EnvSchema = z.object({
   AGENT_KEYPAIR: z.string(),
   MARKETS: z.string().default("[]"),
   RUN_INTERVAL_SECS: z.coerce.number().int().min(300).default(21_600),
-  DRY_RUN: z.string().default("true").transform((v) => v !== "false" && v !== "0"),
+  DRY_RUN: z
+    .string()
+    .default("true")
+    .transform((v) => v !== "false" && v !== "0"),
   MAX_ACTIONS_PER_RUN: z.coerce.number().int().min(0).max(5).default(2),
   MAX_STEP_BPS: z.coerce.number().int().min(1).max(10_000).default(2_500),
   X_ENABLED: bool,

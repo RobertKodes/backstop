@@ -19,7 +19,13 @@ describe.skipIf(!url)("PgRepo against the indexer schema (integration)", () => {
     await migrate(db);
     const now = Math.floor(Date.now() / 1000) - 3_600;
     for (const [i, t] of fx.txs.entries()) {
-      await ingestTx(db, null, { signature: t.signature, slot: t.slot, blockTime: now + i * 60, logs: t.logs, failed: false });
+      await ingestTx(db, null, {
+        signature: t.signature,
+        slot: t.slot,
+        blockTime: now + i * 60,
+        logs: t.logs,
+        failed: false,
+      });
     }
   });
   afterAll(async () => db.end());

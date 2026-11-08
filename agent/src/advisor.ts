@@ -139,23 +139,33 @@ export class ClaudeAdvisor implements Advisor {
       });
     } catch (e) {
       if (e instanceof Anthropic.APIError) {
-        throw new AdvisorError("api", `Anthropic API error ${e.status ?? ""}: ${e.message}`, { status: e.status, requestId: e.requestID });
+        throw new AdvisorError("api", `Anthropic API error ${e.status ?? ""}: ${e.message}`, {
+          status: e.status,
+          requestId: e.requestID,
+        });
       }
       throw e;
     }
     // Check why generation stopped before touching the content: a refusal has
     // no usable output and a max_tokens stop leaves truncated JSON.
     if (res.stop_reason === "refusal") {
-      throw new AdvisorError("refusal", "model declined the request", { category: res.stop_details?.category ?? null, model: res.model });
+      throw new AdvisorError("refusal", "model declined the request", {
+        category: res.stop_details?.category ?? null,
+        model: res.model,
+      });
     }
-    if (res.stop_reason === "max_tokens") throw new AdvisorError("max_tokens", "response hit max_tokens", { model: res.model });
+    if (res.stop_reason === "max_tokens")
+      throw new AdvisorError("max_tokens", "response hit max_tokens", { model: res.model });
     const text = res.content.find((b) => b.type === "text");
-    if (!text || text.type !== "text") throw new AdvisorError("unparsed", `no text output (stop_reason ${res.stop_reason})`, { model: res.model });
+    if (!text || text.type !== "text")
+      throw new AdvisorError("unparsed", `no text output (stop_reason ${res.stop_reason})`, { model: res.model });
     let output: AgentOutput;
     try {
       output = format.parse(text.text);
     } catch (e) {
-      throw new AdvisorError("unparsed", `structured output failed validation: ${(e as Error).message}`, { model: res.model });
+      throw new AdvisorError("unparsed", `structured output failed validation: ${(e as Error).message}`, {
+        model: res.model,
+      });
     }
     return {
       output,

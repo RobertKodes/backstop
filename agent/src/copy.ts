@@ -24,11 +24,18 @@ const RULES: { rule: string; test: (t: string) => string | null }[] = [
       return null;
     },
   },
-  { rule: "no investment/security framing", test: (t) => /\b(investment|security token|returns? on|profit(s|able)?|passive income)\b/i.exec(t)?.[0] ?? null },
-  { rule: "no calls to action or predictions", test: (t) => /\b(buy now|to the moon|moon(ing)?|will (pump|rise|go up)|price target|nfa)\b/i.exec(t)?.[0] ?? null },
+  {
+    rule: "no investment/security framing",
+    test: (t) => /\b(investment|security token|returns? on|profit(s|able)?|passive income)\b/i.exec(t)?.[0] ?? null,
+  },
+  {
+    rule: "no calls to action or predictions",
+    test: (t) => /\b(buy now|to the moon|moon(ing)?|will (pump|rise|go up)|price target|nfa)\b/i.exec(t)?.[0] ?? null,
+  },
   {
     rule: "chest withdrawals must be described as time-locked",
-    test: (t) => (/\bwithdraw/i.test(t) && /\bchest/i.test(t) && !/time[\s-]?lock/i.test(t) ? "chest withdrawal" : null),
+    test: (t) =>
+      /\bwithdraw/i.test(t) && /\bchest/i.test(t) && !/time[\s-]?lock/i.test(t) ? "chest withdrawal" : null,
   },
 ];
 
@@ -41,14 +48,17 @@ export function copyViolations(text: string): CopyViolation[] {
   return out;
 }
 
-const fmt = (n: number | null, dp = 2) => (n === null ? "n/a" : n.toLocaleString("en-US", { maximumFractionDigits: dp }));
+const fmt = (n: number | null, dp = 2) =>
+  n === null ? "n/a" : n.toLocaleString("en-US", { maximumFractionDigits: dp });
 
 /** Compliant fallback narration from numbers only. */
 export function templateNarration(s: Snapshot, decisions: Decision[]): { post: string; feed: string } {
   const executed = decisions.filter((d) => d.kind === "execute");
   const gov = decisions.filter((d) => d.kind === "governance");
   const absorb = s.offers.absorptionRate === null ? "n/a" : `${Math.round(s.offers.absorptionRate * 100)}%`;
-  const change = executed.length ? ` Adjusted ${executed.map((d) => d.param).join(", ")} within governance bounds.` : " No parameter changes.";
+  const change = executed.length
+    ? ` Adjusted ${executed.map((d) => d.param).join(", ")} within governance bounds.`
+    : " No parameter changes.";
   const post = `Last ${s.windowHours}h: ${s.offers.created} sell offers, ${absorb} absorbed by holders and the Shield, ${fmt(s.fees.distributed)} ${s.quote} in fees distributed.${change}`;
   const feed = [
     post,

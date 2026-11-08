@@ -35,7 +35,10 @@ export class PgRepo implements Repo {
   }
 
   async marketStats(mint: string) {
-    const [price] = await this.q("select price, base_reserve, quote_reserve, ts from prices where mint = $1 order by ts desc, event_index desc limit 1", [mint]);
+    const [price] = await this.q(
+      "select price, base_reserve, quote_reserve, ts from prices where mint = $1 order by ts desc, event_index desc limit 1",
+      [mint],
+    );
     const [absorbed] = await this.q(
       `select coalesce(sum(tokens),0)::text tokens, coalesce(sum(cost),0)::text quote from fills where mint = $1 and ts > now() - interval '24 hours'`,
       [mint],
@@ -44,12 +47,25 @@ export class PgRepo implements Repo {
       `select coalesce(sum(tokens),0)::text tokens, coalesce(sum(quote),0)::text quote from shield_events where mint = $1 and kind = 'absorbed' and ts > now() - interval '24 hours'`,
       [mint],
     );
-    const [vol] = await this.q(`select coalesce(sum(quote_amount),0)::text volume from prices where mint = $1 and ts > now() - interval '24 hours'`, [mint]);
-    const [live] = await this.q(`select count(*)::int n from offers where mint = $1 and status in ('open','closing')`, [mint]);
-    const [floor] = await this.q("select treasury_lamports, circulating, floor_price, ts from treasury where mint = $1 order by ts desc limit 1", [mint]);
+    const [vol] = await this.q(
+      `select coalesce(sum(quote_amount),0)::text volume from prices where mint = $1 and ts > now() - interval '24 hours'`,
+      [mint],
+    );
+    const [live] = await this.q(`select count(*)::int n from offers where mint = $1 and status in ('open','closing')`, [
+      mint,
+    ]);
+    const [floor] = await this.q(
+      "select treasury_lamports, circulating, floor_price, ts from treasury where mint = $1 order by ts desc limit 1",
+      [mint],
+    );
     return {
       price: price ?? null,
-      absorbedToday: { holdersTokens: absorbed?.tokens ?? "0", holdersQuote: absorbed?.quote ?? "0", shieldTokens: shield?.tokens ?? "0", shieldQuote: shield?.quote ?? "0" },
+      absorbedToday: {
+        holdersTokens: absorbed?.tokens ?? "0",
+        holdersQuote: absorbed?.quote ?? "0",
+        shieldTokens: shield?.tokens ?? "0",
+        shieldQuote: shield?.quote ?? "0",
+      },
       volume24h: vol?.volume ?? "0",
       liveOffers: live?.n ?? 0,
       floor: floor ?? null,
@@ -76,9 +92,15 @@ export class PgRepo implements Repo {
 
   async chest(mint: string, owner: string) {
     const [chest] = await this.q("select * from chests where mint = $1 and owner = $2", [mint, owner]);
-    const events = await this.q("select * from chest_events where mint = $1 and owner = $2 order by ts desc limit 100", [mint, owner]);
+    const events = await this.q(
+      "select * from chest_events where mint = $1 and owner = $2 order by ts desc limit 100",
+      [mint, owner],
+    );
     const [grant] = await this.q("select * from grants where mint = $1 and owner = $2", [mint, owner]);
-    const shield = await this.q("select * from shield_positions where mint = $1 and owner = $2 order by id", [mint, owner]);
+    const shield = await this.q("select * from shield_positions where mint = $1 and owner = $2 order by id", [
+      mint,
+      owner,
+    ]);
     return { chest: chest ?? null, events, grant: grant ?? null, shield };
   }
 
@@ -104,7 +126,10 @@ export class PgRepo implements Repo {
   }
 
   async treasury(mint: string) {
-    const history = await this.q("select ts, treasury_lamports, circulating, floor_price from treasury where mint = $1 and ts > now() - interval '30 days' order by ts", [mint]);
+    const history = await this.q(
+      "select ts, treasury_lamports, circulating, floor_price from treasury where mint = $1 and ts > now() - interval '30 days' order by ts",
+      [mint],
+    );
     const redemptions = await this.q("select * from redemptions where mint = $1 order by ts desc limit 50", [mint]);
     return { latest: history[history.length - 1] ?? null, history, redemptions };
   }
@@ -131,11 +156,18 @@ export class PgRepo implements Repo {
        from grants g join chests c on c.mint = g.mint and c.owner = g.owner where g.mint = $1 and g.enabled`,
       [mint],
     );
-    return { shieldDeposits: shield?.total ?? "0", autoAbsorbPerOffer: auto?.capacity ?? "0", activeGrants: auto?.grants ?? 0 };
+    return {
+      shieldDeposits: shield?.total ?? "0",
+      autoAbsorbPerOffer: auto?.capacity ?? "0",
+      activeGrants: auto?.grants ?? 0,
+    };
   }
 
   tickets(mint: string, seller: string) {
-    return this.q("select * from tickets where mint = $1 and seller = $2 and expires_at > now() order by expires_at", [mint, seller]);
+    return this.q("select * from tickets where mint = $1 and seller = $2 and expires_at > now() order by expires_at", [
+      mint,
+      seller,
+    ]);
   }
 
   children() {
@@ -162,6 +194,9 @@ export class PgRepo implements Repo {
   }
 
   keeperRuns(limit: number) {
-    return this.q("select id, job, started_at, finished_at, ok, signature, pre_state_hash, post_state_hash, error from keeper_runs order by id desc limit $1", [limit]);
+    return this.q(
+      "select id, job, started_at, finished_at, ok, signature, pre_state_hash, post_state_hash, error from keeper_runs order by id desc limit $1",
+      [limit],
+    );
   }
 }

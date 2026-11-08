@@ -23,18 +23,30 @@ export const PARAMS: readonly ParamDef[] = [
   { name: "maxDiscountBps", unit: "bps", description: "Upper clamp of the counter-cyclical discount" },
   { name: "offerWindowSecs", unit: "secs", description: "How long an offer stays open to holders" },
   { name: "bidEpochSecs", unit: "secs", description: "Bid batching epoch inside an offer window" },
-  { name: "minOfferSize", unit: "tokens", description: "Smallest sell that becomes an offer (smaller sells go to the AMM)" },
+  {
+    name: "minOfferSize",
+    unit: "tokens",
+    description: "Smallest sell that becomes an offer (smaller sells go to the AMM)",
+  },
   { name: "lotsPerOffer", unit: "count", description: "Lots an offer is split into for randomised allocation" },
   { name: "ticketValiditySecs", unit: "secs", description: "Return Ticket validity" },
   { name: "chestLockSecs", unit: "secs", description: "Chest withdrawal time-lock" },
   { name: "chestPenaltyBps", unit: "bps", description: "Penalty for early chest withdrawal" },
   { name: "redemptionFeeBps", unit: "bps", description: "Treasury redemption fee" },
-  { name: "yieldBufferBps", unit: "bps", description: "Share of chest USDC kept idle (not deployed to the variable-rate lending adapter)" },
+  {
+    name: "yieldBufferBps",
+    unit: "bps",
+    description: "Share of chest USDC kept idle (not deployed to the variable-rate lending adapter)",
+  },
   { name: "shieldPerOfferCap", unit: "quote", description: "Max quote the Shield commits to a single offer" },
   { name: "shieldMaxShareBps", unit: "bps", description: "Max share of an offer the Shield may take" },
   { name: "shieldMinLockSecs", unit: "secs", description: "Minimum Shield lock" },
   { name: "shieldMaxMultiplierBps", unit: "bps", description: "Max Shield lock multiplier" },
-  { name: "shieldMaxPremiumBps", unit: "bps", description: "Shield skips offers whose short TWAP exceeds the hourly TWAP by more than this" },
+  {
+    name: "shieldMaxPremiumBps",
+    unit: "bps",
+    description: "Shield skips offers whose short TWAP exceeds the hourly TWAP by more than this",
+  },
   { name: "priceTwapWindowSecs", unit: "secs", description: "TWAP window used to price offers" },
   { name: "momentumLookbackSecs", unit: "secs", description: "Lookback for the sell/buy momentum signal" },
   { name: "directSellHourlyCap", unit: "tokens", description: "Global hourly cap on direct (sub-minimum) AMM sells" },
@@ -65,7 +77,10 @@ export function validateParams(p: ParamValues): string[] {
   check(g("baseDiscountBps") <= g("maxDiscountBps"), "baseDiscountBps must be ≤ maxDiscountBps");
   check(g("maxDiscountBps") < 5_000n, "maxDiscountBps must be < 5000");
   check(g("offerWindowSecs") >= 60n && g("offerWindowSecs") <= 86_400n, "offerWindowSecs must be in [60, 86400]");
-  check(g("bidEpochSecs") > 0n && g("bidEpochSecs") <= g("offerWindowSecs"), "bidEpochSecs must be in (0, offerWindowSecs]");
+  check(
+    g("bidEpochSecs") > 0n && g("bidEpochSecs") <= g("offerWindowSecs"),
+    "bidEpochSecs must be in (0, offerWindowSecs]",
+  );
   check(g("minOfferSize") > 0n, "minOfferSize must be > 0");
   check(g("lotsPerOffer") >= 1n && g("lotsPerOffer") <= 1_000n, "lotsPerOffer must be in [1, 1000]");
   check(g("ticketValiditySecs") <= 90n * 86_400n, "ticketValiditySecs must be ≤ 90 days");

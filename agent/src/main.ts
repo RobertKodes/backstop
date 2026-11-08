@@ -30,7 +30,17 @@ async function main() {
         await fetch(cfg.governanceWebhook!, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ source: "backstop-agent", mint, proposals: ds.map((d) => ({ param: d.param, from: d.current, to: d.requested, reason: d.reason, rationale: d.rationale })) }),
+          body: JSON.stringify({
+            source: "backstop-agent",
+            mint,
+            proposals: ds.map((d) => ({
+              param: d.param,
+              from: d.current,
+              to: d.requested,
+              reason: d.reason,
+              rationale: d.rationale,
+            })),
+          }),
           signal: AbortSignal.timeout(10_000),
         });
       }
@@ -66,7 +76,13 @@ async function main() {
   };
 
   log.info(
-    { agent: cfg.agent.publicKey.toBase58(), model: cfg.model, dryRun: cfg.dryRun, xEnabled: cfg.x.enabled, markets: cfg.markets.length },
+    {
+      agent: cfg.agent.publicKey.toBase58(),
+      model: cfg.model,
+      dryRun: cfg.dryRun,
+      xEnabled: cfg.x.enabled,
+      markets: cfg.markets.length,
+    },
     "BACKSTOP agent starting",
   );
   if (process.argv.includes("--once")) {
@@ -77,7 +93,12 @@ async function main() {
 
   const app = Fastify({ logger: false });
   app.get("/health", async () => ({ ok: true }));
-  app.get("/status", async () => ({ dryRun: cfg.dryRun, model: cfg.model, xEnabled: cfg.x.enabled, last: Object.fromEntries(last) }));
+  app.get("/status", async () => ({
+    dryRun: cfg.dryRun,
+    model: cfg.model,
+    xEnabled: cfg.x.enabled,
+    last: Object.fromEntries(last),
+  }));
   await app.listen({ port: cfg.healthPort, host: "0.0.0.0" });
 
   let stopping = false;

@@ -89,7 +89,18 @@ describe("REST API", () => {
     const app = await buildApp({ repo: new FakeRepo(), cache: new MemoryCache() });
     await app.ready();
     const doc = app.swagger() as { paths: Record<string, unknown> };
-    for (const p of ["/v1/markets", "/v1/markets/{mint}/offers", "/v1/offers/{offer}", "/v1/markets/{mint}/chests/{owner}", "/v1/markets/{mint}/leaderboards/{kind}", "/v1/markets/{mint}/treasury", "/v1/markets/{mint}/price", "/v1/markets/{mint}/tickets/{seller}", "/v1/children", "/v1/agent/posts"]) {
+    for (const p of [
+      "/v1/markets",
+      "/v1/markets/{mint}/offers",
+      "/v1/offers/{offer}",
+      "/v1/markets/{mint}/chests/{owner}",
+      "/v1/markets/{mint}/leaderboards/{kind}",
+      "/v1/markets/{mint}/treasury",
+      "/v1/markets/{mint}/price",
+      "/v1/markets/{mint}/tickets/{seller}",
+      "/v1/children",
+      "/v1/agent/posts",
+    ]) {
       expect(doc.paths, p).toHaveProperty(p);
     }
     await app.close();
@@ -99,7 +110,11 @@ describe("REST API", () => {
 describe("WebSocket live feed", () => {
   it("forwards events only for subscribed mints", async () => {
     const bus = new EventEmitter();
-    const app = await buildApp({ repo: new FakeRepo(), cache: new MemoryCache(), live: { subscribe: (cb) => bus.on("msg", cb) } });
+    const app = await buildApp({
+      repo: new FakeRepo(),
+      cache: new MemoryCache(),
+      live: { subscribe: (cb) => bus.on("msg", cb) },
+    });
     await app.listen({ port: 0, host: "127.0.0.1" });
     const port = (app.server.address() as { port: number }).port;
     const ws = new WebSocket(`ws://127.0.0.1:${port}/v1/ws`);
@@ -108,7 +123,12 @@ describe("WebSocket live feed", () => {
     ws.on("message", (m) => got.push(m.toString()));
     ws.send(JSON.stringify({ op: "subscribe", mint: MINT }));
     await new Promise((r) => setTimeout(r, 50));
-    bus.emit("msg", JSON.stringify({ events: [{ name: "OfferCreated", data: { mint: "Other1111111111111111111111111111111111111" } }] }));
+    bus.emit(
+      "msg",
+      JSON.stringify({
+        events: [{ name: "OfferCreated", data: { mint: "Other1111111111111111111111111111111111111" } }],
+      }),
+    );
     bus.emit("msg", JSON.stringify({ events: [{ name: "BidPlaced", data: { mint: MINT } }] }));
     await new Promise((r) => setTimeout(r, 50));
     ws.close();

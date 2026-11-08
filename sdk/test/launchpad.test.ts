@@ -38,7 +38,11 @@ describe("launchpad client", () => {
     ]);
     expect(steps[0]!.signers).toEqual([mint]);
     const coder = new BorshCoder(IDLS.launchpad as never);
-    const names = steps.flatMap((s) => s.ixs.filter((ix) => ix.programId.equals(PROGRAM_IDS.launchpad)).map((ix) => coder.instruction.decode(ix.data)?.name));
+    const names = steps.flatMap((s) =>
+      s.ixs
+        .filter((ix) => ix.programId.equals(PROGRAM_IDS.launchpad))
+        .map((ix) => coder.instruction.decode(ix.data)?.name),
+    );
     expect(names.map((n) => n?.replace(/_(\w)/g, (_, c: string) => c.toUpperCase()))).toEqual([
       "createChild",
       "initChildHook",
@@ -57,7 +61,9 @@ describe("launchpad client", () => {
 
   it("rejects invalid parameters before building", async () => {
     const lp = new LaunchpadClient(new Connection("http://127.0.0.1:1"), Keypair.generate().publicKey);
-    await expect(lp.launchSteps(Keypair.generate().publicKey, Keypair.generate(), { ...params, creatorBps: 900 })).rejects.toThrow(/5%/);
+    await expect(
+      lp.launchSteps(Keypair.generate().publicKey, Keypair.generate(), { ...params, creatorBps: 900 }),
+    ).rejects.toThrow(/5%/);
   });
 
   it("vests linearly over the schedule", () => {
