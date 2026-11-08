@@ -11,7 +11,7 @@
     "build:ts": "pnpm -r build",
     "test": "pnpm test:programs && pnpm test:ts",
     "test:programs": "cargo test --workspace",
-    "test:ts": "pnpm -r test",
+    "test:ts": "pnpm -r --filter=!./tests/e2e test",
     "test:e2e": "pnpm --filter ./tests/e2e test",
     "test:load": "pnpm --filter ./tests/load test",
     "lint": "pnpm -r lint && cargo clippy --workspace --all-targets -- -D warnings",
