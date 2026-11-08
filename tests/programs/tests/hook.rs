@@ -515,3 +515,15 @@ fn reward_totals_equal_sum_of_holder_weights() {
         .sum();
     assert_eq!(totals.total_at(k).unwrap(), sum);
 }
+
+/// The keeper's tenure snapshot reads `Holder` through a byte slice
+/// (keeper/src/planner.ts `HOLDER_SLICE`, +8 for the discriminator). Pin it.
+#[test]
+fn holder_layout_matches_keeper_slice() {
+    use backstop_hook::state::Holder;
+    assert_eq!(core::mem::offset_of!(Holder, mint), 0);
+    assert_eq!(core::mem::offset_of!(Holder, wallet), 32);
+    assert_eq!(core::mem::offset_of!(Holder, balance), 64);
+    assert_eq!(core::mem::offset_of!(Holder, last_ts), 72);
+    assert_eq!(core::mem::offset_of!(Holder, acc), 200);
+}

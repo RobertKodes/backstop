@@ -27,7 +27,8 @@ async function main() {
   const log = pino({ level: cfg.logLevel, name: "keeper" });
   const conn = new Connection(cfg.rpcUrl, "confirmed");
   const memory = new MemoryAudit(log);
-  const audit = cfg.databaseUrl ? new PgAudit(new pg.Pool({ connectionString: cfg.databaseUrl, max: 4 }), log) : memory;
+  const db = cfg.databaseUrl ? new pg.Pool({ connectionString: cfg.databaseUrl, max: 4 }) : undefined;
+  const audit = db ? new PgAudit(db, log) : memory;
   const sender = new Sender(conn, cfg.keeper, audit, cfg.priorityFee);
   const sched = new Scheduler(log, webhookAlert(cfg.alertWebhook, log));
   log.info({ keeper: cfg.keeper.publicKey.toBase58(), markets: cfg.markets.length }, "keeper starting");
@@ -38,7 +39,7 @@ async function main() {
       quoteMint: market.quoteMint,
       quoteTokenProgram: market.quoteTokenProgram,
     });
-    const ctx: JobContext = { cfg, market, client, sender, log: log.child({ mint: market.mint.toBase58() }) };
+    const ctx: JobContext = { cfg, market, client, sender, db, log: log.child({ mint: market.mint.toBase58() }) };
     const m = market.mint.toBase58().slice(0, 6);
     sched.add(`${m}:settle`, 5_000, () => settleOffers(ctx));
     sched.add(`${m}:autoabsorb`, 5_000, () => autoAbsorb(ctx));

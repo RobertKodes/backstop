@@ -1,0 +1,6 @@
+environment  = "devnet"
+region       = "eu-west-1"
+image_tag    = "v0.1.0"
+markets_json = "[{\"mint\":\"<BACKSTOP mint>\",\"quoteMint\":\"<quote mint>\"}]"
+# certificate_arn = "arn:aws:acm:eu-west-1:123456789012:certificate/<id>"
+# alarm_email     = "ops@example.org"

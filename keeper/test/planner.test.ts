@@ -104,3 +104,30 @@ describe("route rewriting", () => {
     expect(out[1]!.isWritable).toBe(true);
   });
 });
+
+describe("tenure snapshot", () => {
+  it("decodes the holder slice and ranks by tenure", async () => {
+    const { decodeHolderSlice, tenureRows, HOLDER_SLICE } = await import("../src/planner.js");
+    const { tenureAt, multiplierBps } = await import("@backstop/sdk");
+    const mk = (walletByte: number, balance: bigint, lastTs: number, acc: bigint) => {
+      const b = new Uint8Array(HOLDER_SLICE.length);
+      const v = new DataView(b.buffer);
+      b.fill(walletByte, 0, 32);
+      v.setBigUint64(32, balance, true);
+      v.setBigInt64(40, BigInt(lastTs), true);
+      v.setBigUint64(168, acc & ((1n << 64n) - 1n), true);
+      v.setBigUint64(176, acc >> 64n, true);
+      return b;
+    };
+    const hex = (x: Uint8Array) => Buffer.from(x).toString("hex").slice(0, 4);
+    const big = (1n << 70n) + 5n; // exercises the high u128 word
+    const holders = [mk(1, 100n, 1_000, 0n), mk(2, 50n, 900, big), mk(3, 0n, 0, 999n)].map((b) =>
+      decodeHolderSlice(b, hex),
+    );
+    expect(holders[1]).toEqual({ wallet: "0202", balance: 50n, lastTs: 900, acc: big });
+    const rows = tenureRows(holders, 2_000, 90 * 86_400, 20_000, tenureAt, multiplierBps);
+    expect(rows.map((r) => r.wallet)).toEqual(["0202", "0101"]); // zero-balance holder dropped
+    expect(rows[1]!.tenure).toBe(100n * 1_000n);
+    expect(rows[1]!.multiplierBps).toBe(10_000 + Math.floor((20_000 * 1_000) / (90 * 86_400)));
+  });
+});

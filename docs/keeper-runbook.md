@@ -36,7 +36,7 @@ pnpm keeper:run                           # or: docker compose --profile app up 
 | `shieldLamports` | 15 min | `convert_shield_lamports`: redemption-fee SOL → Shield rewards | pending lamports accumulate |
 | `yield` | 1 h | `rebalance` toward `yield_buffer_bps` | buffer drifts; `unwind` remains permissionless |
 | `epochs` | 10 min | `advance_epochs` when > 32 boundaries pending; checkpoint holders approaching the ring horizon (D-020) | transfers prepend catch-up (SDK); very idle markets need the crank |
-| `snapshot` | 1 h | treasury `snapshot` event (floor price history) | charts have gaps |
+| `snapshot` | 1 h | treasury `snapshot` event (floor price history); with `DATABASE_URL`, a `tenure_snapshots` batch read from every on-chain `Holder` (48 h retained) | charts have gaps; the tenure leaderboard goes stale |
 
 Every transaction is simulated first and logged to `keeper_runs` with
 pre/post SHA-256 hashes of every writable account (`keeper/src/tx.ts`).

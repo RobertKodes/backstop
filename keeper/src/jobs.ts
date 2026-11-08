@@ -12,7 +12,9 @@ import {
   type MarketClient,
   PROGRAM_IDS,
   pda,
+  multiplierBps,
   podU128,
+  tenureAt,
   TOKEN_2022,
   TOKEN_PROGRAM,
   WSOL,
@@ -21,9 +23,20 @@ import { createAssociatedTokenAccountIdempotentInstruction } from "@solana/spl-t
 import { type AccountMeta, type GetProgramAccountsFilter, PublicKey } from "@solana/web3.js";
 import BN from "bn.js";
 import bs58 from "bs58";
+import type { Pool } from "pg";
 import type { Logger } from "pino";
 import type { Config, MarketCfg } from "./config.js";
-import { autoBidAmount, chunkPlan, holdersToCheckpoint, nextOfferAction, shuffle } from "./planner.js";
+import {
+  autoBidAmount,
+  chunkPlan,
+  decodeHolderSlice,
+  HOLDER_MINT_OFFSET,
+  HOLDER_SLICE,
+  holdersToCheckpoint,
+  nextOfferAction,
+  shuffle,
+  tenureRows,
+} from "./planner.js";
 import type { Sender } from "./tx.js";
 
 const disc = (program: keyof typeof IDLS, name: string) => {
@@ -38,6 +51,8 @@ const memcmp = (offset: number, bytes: string): GetProgramAccountsFilter => ({ m
 
 export interface JobContext {
   cfg: Config;
+  /** Present when DATABASE_URL is set (audit log, tenure snapshots). */
+  db?: Pool;
   market: MarketCfg;
   client: MarketClient;
   sender: Sender;
@@ -454,6 +469,60 @@ export async function epochs(c: JobContext): Promise<void> {
 
 export async function snapshot(c: JobContext): Promise<void> {
   await c.sender.send([await c.client.snapshotIx()], { job: "treasury.snapshot" });
+  if (c.db) await tenureSnapshot(c, c.db);
+}
+
+/**
+ * Tenure leaderboard source: read every holder's tenure state from chain
+ * (authoritative, sliced to 184 bytes per account), evaluate tenure and
+ * multiplier now, write one `tenure_snapshots` batch and prune batches older
+ * than 48 h.
+ */
+export async function tenureSnapshot(c: JobContext, db: Pool): Promise<number> {
+  const { client } = c;
+  const cfg = await client.fetchHookConfig();
+  const accounts = await client.connection.getProgramAccounts(PROGRAM_IDS.hook, {
+    commitment: "confirmed",
+    dataSlice: HOLDER_SLICE,
+    filters: [memcmp(0, disc("hook", "Holder")), memcmp(HOLDER_MINT_OFFSET, client.mint.toBase58())],
+  });
+  const now = Math.floor(Date.now() / 1000);
+  const holders = accounts.map((a) => decodeHolderSlice(a.account.data, (b) => bs58.encode(b)));
+  const rows = tenureRows(holders, now, cfg.tenureCapSecs.toNumber(), cfg.tenureExtraBps, tenureAt, multiplierBps);
+  const mint = client.mint.toBase58();
+  const ts = new Date(now * 1000);
+  const client_ = await db.connect();
+  try {
+    await client_.query("begin");
+    for (let i = 0; i < rows.length; i += 5_000) {
+      const chunk = rows.slice(i, i + 5_000);
+      await client_.query(
+        `insert into tenure_snapshots (mint, wallet, ts, balance, tenure, multiplier_bps)
+         select $1, w, $2, b::numeric, t::numeric, m from unnest($3::text[], $4::text[], $5::text[], $6::int[]) as x(w, b, t, m)
+         on conflict do nothing`,
+        [
+          mint,
+          ts,
+          chunk.map((r) => r.wallet),
+          chunk.map((r) => r.balance.toString()),
+          chunk.map((r) => r.tenure.toString()),
+          chunk.map((r) => r.multiplierBps),
+        ],
+      );
+    }
+    await client_.query("delete from tenure_snapshots where mint = $1 and ts < $2", [
+      mint,
+      new Date((now - 48 * 3_600) * 1000),
+    ]);
+    await client_.query("commit");
+  } catch (e) {
+    await client_.query("rollback");
+    throw e;
+  } finally {
+    client_.release();
+  }
+  c.log.info({ holders: rows.length }, "tenure snapshot written");
+  return rows.length;
 }
 
 export { podU128 };

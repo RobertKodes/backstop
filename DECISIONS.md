@@ -400,3 +400,39 @@ refusal category; the serving model is recorded per run.
 bearer token (`tweet.write`) obtained out of band; failures keep the post
 in-app only. *Rejected:* OAuth 1.0a request signing in-service (more secret
 material to hold, no benefit for a single posting account).
+
+## Hardening (Phase 11)
+
+### D-070 · Fuzzing = executable specs shared by proptest and libFuzzer
+The allocator, reward accumulator and tenure checks live in
+`backstop-math::check` (feature `check`, never compiled on-chain) and are
+driven both by proptest on stable (CI default 256 cases, `FUZZ_CASES` for long
+campaigns) and by coverage-guided libFuzzer targets in `fuzz/` (nightly).
+*Rejected:* fuzz-only harnesses (would not run in stable CI) and duplicating
+the brute-force model in two places.
+
+### D-071 · Tenure leaderboard is snapshotted from chain by the keeper
+The indexer cannot reconstruct tenure exactly inside its declarative,
+replay-safe mutations (inbound accrual, resets and absorb credits interleave
+within transactions). The keeper's hourly `snapshot` job reads every
+`Holder` with `getProgramAccounts` sliced to 184 bytes (wallet .. acc),
+evaluates tenure and multiplier with the SDK's parity-tested math and writes a
+`tenure_snapshots` batch (48 h retained). The slice offsets are pinned by a
+Rust `offset_of!` test. *Rejected:* event-sourced tenure in SQL (fragile),
+per-request RPC reads from the API (slow, RPC-cost heavy).
+
+### D-072 · Load test drives the real ingest path with IDL-encoded events
+`tests/load` Borsh-encodes events with the programs' own IDLs, wraps them in
+runtime log lines and feeds them through `ingestTx` sequentially (as the
+poller does); the API is exercised in-process with the production query layer,
+with and without the response cache. The production rate limit is lifted for
+the measurement. CI runs a smoke scale; `pnpm test:load` runs 50k holders and
+1 000 offers (500/h for 2 h).
+
+### D-073 · Hosting: AWS ECS Fargate behind one ALB
+Fargate ARM64 tasks (singletons for indexer/keeper/agent, scaled api/web),
+RDS Postgres 16, ElastiCache Redis 7 (TLS), Secrets Manager with values set
+out of band, one ALB routing `/` → web, `/v1/*`+`/docs` → API (WebSocket via a
+3 600 s idle timeout), `/helius` → indexer. *Rejected:* Kubernetes (operational
+weight for five services), Cloud Run (WebSocket and singleton-worker
+semantics less direct).

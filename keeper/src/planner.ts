@@ -110,3 +110,62 @@ export function shuffle<T>(items: T[], seed: number): T[] {
   }
   return a;
 }
+
+// ------------------------------------------------------------ tenure snapshot
+
+/**
+ * Byte range of the zero-copy `Holder` account the keeper fetches for tenure
+ * snapshots (`dataSlice`): wallet .. acc. Offsets include the 8-byte
+ * discriminator; the struct is #[repr(C)] with Pod fields (no padding).
+ */
+export const HOLDER_SLICE = { offset: 40, length: 184 } as const;
+export const HOLDER_MINT_OFFSET = 8;
+
+export interface HolderTenure {
+  wallet: string;
+  balance: bigint;
+  lastTs: number;
+  acc: bigint;
+}
+
+/** Decode the `HOLDER_SLICE` bytes of one holder account. */
+export function decodeHolderSlice(b: Uint8Array, encodeWallet: (bytes: Uint8Array) => string): HolderTenure {
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  const u128 = (o: number) => v.getBigUint64(o, true) | (v.getBigUint64(o + 8, true) << 64n);
+  return {
+    wallet: encodeWallet(b.subarray(0, 32)),
+    balance: v.getBigUint64(32, true), // offset 72
+    lastTs: Number(v.getBigInt64(40, true)), // offset 80
+    acc: u128(168), // offset 208
+  };
+}
+
+export interface TenureRow {
+  wallet: string;
+  balance: bigint;
+  tenure: bigint;
+  multiplierBps: number;
+}
+
+/** Evaluate tenure + multiplier at `now` for every holder with a balance, highest tenure first. */
+export function tenureRows(
+  holders: HolderTenure[],
+  now: number,
+  capSecs: number,
+  extraBps: number,
+  tenureAt: (balance: bigint, acc: bigint, lastTs: number, now: number) => bigint,
+  multiplierBps: (balance: bigint, tenure: bigint, capSecs: number, extraBps: number) => number,
+): TenureRow[] {
+  return holders
+    .filter((h) => h.balance > 0n)
+    .map((h) => {
+      const tenure = tenureAt(h.balance, h.acc, h.lastTs, now);
+      return {
+        wallet: h.wallet,
+        balance: h.balance,
+        tenure,
+        multiplierBps: multiplierBps(h.balance, tenure, capSecs, extraBps),
+      };
+    })
+    .sort((a, b) => (b.tenure > a.tenure ? 1 : b.tenure < a.tenure ? -1 : 0));
+}
