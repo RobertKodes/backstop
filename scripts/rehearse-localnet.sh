@@ -14,4 +14,4 @@ for p in backstop_hook backstop_core backstop_amm backstop_offers backstop_chest
   [ -f "$so" ] || { echo "missing $so — run scripts/build-programs.sh" >&2; exit 1; }
   args+=(--bpf-program "$id" "$so")
 done
-exec solana-test-validator --reset --quiet --ledger "$LEDGER" --limit-ledger-size 50000000 "${args[@]}"
+exec solana-test-validator --reset --quiet --ledger "$LEDGER" --limit-blockstore-size 50000000 "${args[@]}"

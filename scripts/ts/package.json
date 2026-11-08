@@ -1,0 +1,28 @@
+{
+  "name": "@backstop/scripts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "echo \"scripts are exercised by the localnet rehearsal (scripts/rehearse-localnet.sh)\"",
+    "genesis": "node dist/genesis.js",
+    "seed": "node dist/seed.js"
+  },
+  "dependencies": {
+    "@anchor-lang/core": "1.2.2",
+    "@backstop/sdk": "workspace:*",
+    "@solana/spl-token": "0.4.15",
+    "@solana/spl-token-metadata": "0.1.6",
+    "@solana/web3.js": "1.99.0",
+    "bn.js": "^5.2.3",
+    "bs58": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.2.0",
+    "@types/node": "^22.15.0",
+    "typescript": "5.9.3"
+  }
+}
