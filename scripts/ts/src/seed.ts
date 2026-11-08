@@ -6,6 +6,7 @@
 //   pnpm seed:devnet [--wallets 8] [--fast] [--crank] [--child]
 //
 // --fast  : governance shortens the offer window to 60 s (demo clusters only)
+// --window N : set the offer window to N seconds instead (e.g. 600 for live demos)
 // --crank : the script closes, settles, sells remainders and claims itself
 //           instead of waiting for the keeper
 // --child : launch a child token through the launchpad
@@ -51,16 +52,20 @@ async function main() {
   // wallets need ~2 SOL each, the child creator 12 SOL (6 SOL locked liquidity + rent)
   await airdropIfNeeded(conn, deployer.publicKey, (2 * n + 16) * SOL, c);
 
-  if (flag("fast")) {
+  // --window N: demo offer window in seconds (--fast = 60). Governance-only, demo clusters.
+  const window = flag("fast") ? 60 : arg("window") ? Number(arg("window")) : undefined;
+  if (window) {
     const setParam = (param: string, value: number) =>
       client.programs.core.methods
         .setParam({ [param]: {} } as never, new BN(value))
         .accountsStrict({ governance: deployer.publicKey, market: pda.market(mint) })
         .instruction();
-    await tx.send("demo timing (60 s offer window)", [
-      await setParam("bidEpochSecs", 20),
-      await setParam("offerWindowSecs", 60),
-    ]);
+    const epoch = Math.max(10, Math.min(60, Math.floor(window / 3)));
+    const ixs = [await setParam("bidEpochSecs", epoch), await setParam("offerWindowSecs", window)];
+    const cur = await client.fetchMarket();
+    // keep bid epoch <= window while shrinking or growing
+    if (window > cur.params.offerWindowSecs) ixs.reverse();
+    await tx.send(`demo timing (${window} s offer window)`, ixs);
   }
 
   // fund wallets: SOL for fees (creator gets enough for a child launch) + test USDC
