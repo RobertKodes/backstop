@@ -4,10 +4,12 @@ use anchor_lang::prelude::*;
 use backstop_common::{defaults, seeds};
 
 use crate::errors::CoreError;
-use crate::events::{ActionCancelled, ActionExecuted, ActionQueued, ParamUpdated, ParamsUpdated, PausesUpdated};
+use crate::events::{
+    ActionCancelled, ActionExecuted, ActionQueued, ParamUpdated, ParamsUpdated, PausesUpdated,
+};
 use crate::state::{
-    pause, AgentAuthority, Market, MarketParams, OracleConfig, ParamBound, ParamId, QueuedAction, TimelockAction, Treasury,
-    PARAM_COUNT,
+    pause, AgentAuthority, Market, MarketParams, OracleConfig, ParamBound, ParamId, QueuedAction,
+    TimelockAction, Treasury, PARAM_COUNT,
 };
 
 #[derive(Accounts)]
@@ -26,7 +28,11 @@ pub fn set_params(ctx: Context<Govern>, params: MarketParams) -> Result<()> {
     params.validate()?;
     let m = &mut ctx.accounts.market;
     m.params = params;
-    emit!(ParamsUpdated { mint: m.mint, params, by: ctx.accounts.governance.key() });
+    emit!(ParamsUpdated {
+        mint: m.mint,
+        params,
+        by: ctx.accounts.governance.key()
+    });
     Ok(())
 }
 
@@ -34,7 +40,14 @@ pub fn set_param(ctx: Context<Govern>, param: ParamId, value: u64) -> Result<()>
     let m = &mut ctx.accounts.market;
     let old = m.params.get(param);
     m.params.set(param, value)?;
-    emit!(ParamUpdated { mint: m.mint, param, old_value: old, new_value: value, by: ctx.accounts.governance.key(), agent: false });
+    emit!(ParamUpdated {
+        mint: m.mint,
+        param,
+        old_value: old,
+        new_value: value,
+        by: ctx.accounts.governance.key(),
+        agent: false
+    });
     Ok(())
 }
 
@@ -96,12 +109,19 @@ pub fn set_pauses(ctx: Context<SetPauses>, pauses: u8) -> Result<()> {
     if who == m.governance {
         m.pauses = pauses;
     } else if who == m.guardian && m.guardian != Pubkey::default() {
-        require!(pauses & m.pauses == m.pauses, CoreError::GuardianCannotUnpause);
+        require!(
+            pauses & m.pauses == m.pauses,
+            CoreError::GuardianCannotUnpause
+        );
         m.pauses = pauses;
     } else {
         return err!(CoreError::Unauthorized);
     }
-    emit!(PausesUpdated { mint: m.mint, pauses: m.pauses, by: who });
+    emit!(PausesUpdated {
+        mint: m.mint,
+        pauses: m.pauses,
+        by: who
+    });
     Ok(())
 }
 
@@ -145,7 +165,13 @@ pub struct GovernAgent<'info> {
 }
 
 /// Governance sets the on-chain [min, max] window for one parameter.
-pub fn set_agent_bound(ctx: Context<GovernAgent>, param: ParamId, enabled: bool, min: u64, max: u64) -> Result<()> {
+pub fn set_agent_bound(
+    ctx: Context<GovernAgent>,
+    param: ParamId,
+    enabled: bool,
+    min: u64,
+    max: u64,
+) -> Result<()> {
     require!(min <= max, CoreError::InvalidParameter);
     let b = &mut ctx.accounts.agent_authority.bounds[param as usize];
     b.enabled = enabled;
@@ -185,13 +211,23 @@ pub fn agent_set_param(ctx: Context<AgentSetParam>, param: ParamId, value: u64) 
     let b = a.bounds[param as usize];
     require!(b.enabled, CoreError::NotAgentTunable);
     require!(value >= b.min && value <= b.max, CoreError::OutOfBounds);
-    require!(now >= b.last_update.saturating_add(a.cooldown_secs), CoreError::Cooldown);
+    require!(
+        now >= b.last_update.saturating_add(a.cooldown_secs),
+        CoreError::Cooldown
+    );
     let m = &mut ctx.accounts.market;
     let old = m.params.get(param);
     m.params.set(param, value)?;
     a.bounds[param as usize].last_update = now;
     a.updates = a.updates.saturating_add(1);
-    emit!(ParamUpdated { mint: m.mint, param, old_value: old, new_value: value, by: ctx.accounts.agent.key(), agent: true });
+    emit!(ParamUpdated {
+        mint: m.mint,
+        param,
+        old_value: old,
+        new_value: value,
+        by: ctx.accounts.agent.key(),
+        agent: true
+    });
     Ok(())
 }
 
@@ -224,7 +260,12 @@ pub fn queue_action(ctx: Context<QueueAction>, id: u64, action: TimelockAction) 
     q.action = action;
     q.queued_at = now;
     q.eta = now + defaults::GOVERNANCE_TIMELOCK_SECS;
-    emit!(ActionQueued { mint: ctx.accounts.market.mint, id, action, eta: q.eta });
+    emit!(ActionQueued {
+        mint: ctx.accounts.market.mint,
+        id,
+        action,
+        eta: q.eta
+    });
     Ok(())
 }
 
@@ -258,18 +299,31 @@ pub fn execute_action(ctx: Context<ExecuteAction>) -> Result<()> {
     require!(now >= q.eta, CoreError::TimelockNotExpired);
     match q.action {
         TimelockAction::TreasuryWithdraw { to, lamports } => {
-            require_keys_eq!(ctx.accounts.destination.key(), to, CoreError::AccountMismatch);
+            require_keys_eq!(
+                ctx.accounts.destination.key(),
+                to,
+                CoreError::AccountMismatch
+            );
             let t = ctx.accounts.treasury.to_account_info();
-            let free = crate::instructions::treasury::treasury_free_lamports(&t, &ctx.accounts.market)?;
+            let free =
+                crate::instructions::treasury::treasury_free_lamports(&t, &ctx.accounts.market)?;
             require!(lamports <= free, CoreError::InsufficientTreasury);
             **t.try_borrow_mut_lamports()? -= lamports;
-            **ctx.accounts.destination.to_account_info().try_borrow_mut_lamports()? += lamports;
+            **ctx
+                .accounts
+                .destination
+                .to_account_info()
+                .try_borrow_mut_lamports()? += lamports;
         }
         TimelockAction::SetRedemptionPaused { paused } => {
             ctx.accounts.market.redemption_paused = paused;
         }
     }
-    emit!(ActionExecuted { mint: ctx.accounts.market.mint, id: q.id, action: q.action });
+    emit!(ActionExecuted {
+        mint: ctx.accounts.market.mint,
+        id: q.id,
+        action: q.action
+    });
     Ok(())
 }
 
@@ -284,6 +338,9 @@ pub struct CancelAction<'info> {
 }
 
 pub fn cancel_action(ctx: Context<CancelAction>) -> Result<()> {
-    emit!(ActionCancelled { mint: ctx.accounts.market.mint, id: ctx.accounts.queued.id });
+    emit!(ActionCancelled {
+        mint: ctx.accounts.market.mint,
+        id: ctx.accounts.queued.id
+    });
     Ok(())
 }

@@ -126,14 +126,26 @@ impl<'a, 'info> Ctx<'a, 'info> {
         [seeds::POOL, mint.as_ref(), bump]
     }
 
-    fn quote_xfer(&self, from: &AccountInfo<'info>, to: &AccountInfo<'info>, auth: &AccountInfo<'info>, amt: u64, signer: &[&[&[u8]]]) -> Result<()> {
+    fn quote_xfer(
+        &self,
+        from: &AccountInfo<'info>,
+        to: &AccountInfo<'info>,
+        auth: &AccountInfo<'info>,
+        amt: u64,
+        signer: &[&[&[u8]]],
+    ) -> Result<()> {
         if amt == 0 {
             return Ok(());
         }
         token_interface::transfer_checked(
             CpiContext::new_with_signer(
                 self.quote_program.key(),
-                TransferChecked { from: from.clone(), mint: self.quote_mint.to_account_info(), to: to.clone(), authority: auth.clone() },
+                TransferChecked {
+                    from: from.clone(),
+                    mint: self.quote_mint.to_account_info(),
+                    to: to.clone(),
+                    authority: auth.clone(),
+                },
                 signer,
             ),
             amt,
@@ -166,16 +178,33 @@ impl<'a, 'info> Ctx<'a, 'info> {
 }
 
 /// Apply a swap to the pool's reserves, stats and oracle. `buy` = quote in.
-fn apply(pool: &AccountLoader<Pool>, r: &SwapResult, buy: bool, now: i64) -> Result<(u64, u64, u128, u8)> {
+fn apply(
+    pool: &AccountLoader<Pool>,
+    r: &SwapResult,
+    buy: bool,
+    now: i64,
+) -> Result<(u64, u64, u128, u8)> {
     let mut p = pool.load_mut()?;
     if buy {
-        p.quote_reserve = p.quote_reserve.checked_add(r.reserve_in).ok_or(AmmError::MathOverflow)?;
-        p.base_reserve = p.base_reserve.checked_sub(r.reserve_out).ok_or(AmmError::InsufficientLiquidity)?;
+        p.quote_reserve = p
+            .quote_reserve
+            .checked_add(r.reserve_in)
+            .ok_or(AmmError::MathOverflow)?;
+        p.base_reserve = p
+            .base_reserve
+            .checked_sub(r.reserve_out)
+            .ok_or(AmmError::InsufficientLiquidity)?;
         p.volume_base = p.volume_base.saturating_add(r.reserve_out);
         p.volume_quote = p.volume_quote.saturating_add(r.reserve_in);
     } else {
-        p.base_reserve = p.base_reserve.checked_add(r.reserve_in).ok_or(AmmError::MathOverflow)?;
-        p.quote_reserve = p.quote_reserve.checked_sub(r.reserve_out).ok_or(AmmError::InsufficientLiquidity)?;
+        p.base_reserve = p
+            .base_reserve
+            .checked_add(r.reserve_in)
+            .ok_or(AmmError::MathOverflow)?;
+        p.quote_reserve = p
+            .quote_reserve
+            .checked_sub(r.reserve_out)
+            .ok_or(AmmError::InsufficientLiquidity)?;
         p.volume_base = p.volume_base.saturating_add(r.reserve_in);
         p.volume_quote = p.volume_quote.saturating_add(r.reserve_out);
     }
@@ -200,12 +229,22 @@ fn pre_trade(pool: &AccountLoader<Pool>, now: i64) -> Result<(u64, u64)> {
 
 // ---------------------------------------------------------- user swaps ---
 
-pub fn buy<'info>(ctx: Context<'info, Swap<'info>>, quote_in: u64, min_base_out: u64) -> Result<u64> {
+pub fn buy<'info>(
+    ctx: Context<'info, Swap<'info>>,
+    quote_in: u64,
+    min_base_out: u64,
+) -> Result<u64> {
     require!(quote_in > 0, AmmError::InvalidAmount);
     let now = Clock::get()?.unix_timestamp;
     let a = &ctx.accounts;
     let (base_r, quote_r) = pre_trade(&a.pool, now)?;
-    let r = amm::buy(quote_in, base_r, quote_r, a.market.params.trade_fee_bps as u32).mx()?;
+    let r = amm::buy(
+        quote_in,
+        base_r,
+        quote_r,
+        a.market.params.trade_fee_bps as u32,
+    )
+    .mx()?;
     require!(r.user_out >= min_base_out, AmmError::Slippage);
     let (br, qr, price, bump) = apply(&a.pool, &r, true, now)?;
 
@@ -220,11 +259,30 @@ pub fn buy<'info>(ctx: Context<'info, Swap<'info>>, quote_in: u64, min_base_out:
         quote_program: &a.quote_token_program,
     };
     let user = a.user.to_account_info();
-    c.quote_xfer(&a.user_quote.to_account_info(), &c.quote_vault.to_account_info(), &user, r.reserve_in, &[])?;
-    c.quote_xfer(&a.user_quote.to_account_info(), &c.fee_vault.to_account_info(), &user, r.fee, &[])?;
+    c.quote_xfer(
+        &a.user_quote.to_account_info(),
+        &c.quote_vault.to_account_info(),
+        &user,
+        r.reserve_in,
+        &[],
+    )?;
+    c.quote_xfer(
+        &a.user_quote.to_account_info(),
+        &c.fee_vault.to_account_info(),
+        &user,
+        r.fee,
+        &[],
+    )?;
     let (b, m) = ([bump], a.mint.key());
     let ps = c.pool_seeds(&b, &m);
-    c.base_xfer(&c.base_vault.to_account_info(), &a.user_base.to_account_info(), &c.pool.to_account_info(), ctx.remaining_accounts, r.user_out, &[&ps])?;
+    c.base_xfer(
+        &c.base_vault.to_account_info(),
+        &a.user_base.to_account_info(),
+        &c.pool.to_account_info(),
+        ctx.remaining_accounts,
+        r.user_out,
+        &[&ps],
+    )?;
 
     emit!(Swapped {
         mint: m,
@@ -244,23 +302,42 @@ pub fn buy<'info>(ctx: Context<'info, Swap<'info>>, quote_in: u64, min_base_out:
 /// Direct sell — only for amounts below the minimum offer size. Larger sells
 /// must go through the offer book. Per-wallet rolling cap: transfer hook.
 /// Global hourly cap: here.
-pub fn sell<'info>(ctx: Context<'info, Swap<'info>>, base_in: u64, min_quote_out: u64) -> Result<u64> {
+pub fn sell<'info>(
+    ctx: Context<'info, Swap<'info>>,
+    base_in: u64,
+    min_quote_out: u64,
+) -> Result<u64> {
     require!(base_in > 0, AmmError::InvalidAmount);
     let now = Clock::get()?.unix_timestamp;
     let a = &ctx.accounts;
-    require!(base_in < a.market.params.min_offer_size, AmmError::UseOfferBook);
+    require!(
+        base_in < a.market.params.min_offer_size,
+        AmmError::UseOfferBook
+    );
     {
         let mut p = a.pool.load_mut()?;
         if now.saturating_sub(p.direct_hour_start) >= HOUR {
             p.direct_hour_start = now;
             p.direct_hour_sold = 0;
         }
-        let next = p.direct_hour_sold.checked_add(base_in).ok_or(AmmError::MathOverflow)?;
-        require!(next <= a.market.params.direct_sell_hourly_cap, AmmError::DirectSellHourlyCap);
+        let next = p
+            .direct_hour_sold
+            .checked_add(base_in)
+            .ok_or(AmmError::MathOverflow)?;
+        require!(
+            next <= a.market.params.direct_sell_hourly_cap,
+            AmmError::DirectSellHourlyCap
+        );
         p.direct_hour_sold = next;
     }
     let (base_r, quote_r) = pre_trade(&a.pool, now)?;
-    let r = amm::sell(base_in, base_r, quote_r, a.market.params.trade_fee_bps as u32).mx()?;
+    let r = amm::sell(
+        base_in,
+        base_r,
+        quote_r,
+        a.market.params.trade_fee_bps as u32,
+    )
+    .mx()?;
     require!(r.user_out >= min_quote_out, AmmError::Slippage);
     let (br, qr, price, bump) = apply(&a.pool, &r, false, now)?;
 
@@ -274,12 +351,31 @@ pub fn sell<'info>(ctx: Context<'info, Swap<'info>>, base_in: u64, min_quote_out
         base_program: &a.base_token_program,
         quote_program: &a.quote_token_program,
     };
-    c.base_xfer(&a.user_base.to_account_info(), &c.base_vault.to_account_info(), &a.user.to_account_info(), ctx.remaining_accounts, base_in, &[])?;
+    c.base_xfer(
+        &a.user_base.to_account_info(),
+        &c.base_vault.to_account_info(),
+        &a.user.to_account_info(),
+        ctx.remaining_accounts,
+        base_in,
+        &[],
+    )?;
     let (b, m) = ([bump], a.mint.key());
     let ps = c.pool_seeds(&b, &m);
     let pool_ai = c.pool.to_account_info();
-    c.quote_xfer(&c.quote_vault.to_account_info(), &a.user_quote.to_account_info(), &pool_ai, r.user_out, &[&ps])?;
-    c.quote_xfer(&c.quote_vault.to_account_info(), &c.fee_vault.to_account_info(), &pool_ai, r.fee, &[&ps])?;
+    c.quote_xfer(
+        &c.quote_vault.to_account_info(),
+        &a.user_quote.to_account_info(),
+        &pool_ai,
+        r.user_out,
+        &[&ps],
+    )?;
+    c.quote_xfer(
+        &c.quote_vault.to_account_info(),
+        &c.fee_vault.to_account_info(),
+        &pool_ai,
+        r.fee,
+        &[&ps],
+    )?;
 
     emit!(Swapped {
         mint: m,
@@ -299,13 +395,26 @@ pub fn sell<'info>(ctx: Context<'info, Swap<'info>>, base_in: u64, min_quote_out
 // ------------------------------------------------------ protocol swaps ---
 
 /// Offer remainder: escrow → pool, proceeds to the seller. No size limits.
-pub fn sell_from_offer<'info>(ctx: Context<'info, ProtocolSwap<'info>>, base_in: u64, min_quote_out: u64) -> Result<u64> {
+pub fn sell_from_offer<'info>(
+    ctx: Context<'info, ProtocolSwap<'info>>,
+    base_in: u64,
+    min_quote_out: u64,
+) -> Result<u64> {
     require!(base_in > 0, AmmError::InvalidAmount);
     let now = Clock::get()?.unix_timestamp;
     let a = &ctx.accounts;
-    require!(a.source.mint == a.mint.key() && a.destination.mint == a.quote_mint.key(), AmmError::AccountMismatch);
+    require!(
+        a.source.mint == a.mint.key() && a.destination.mint == a.quote_mint.key(),
+        AmmError::AccountMismatch
+    );
     let (base_r, quote_r) = pre_trade(&a.pool, now)?;
-    let r = amm::sell(base_in, base_r, quote_r, a.market.params.trade_fee_bps as u32).mx()?;
+    let r = amm::sell(
+        base_in,
+        base_r,
+        quote_r,
+        a.market.params.trade_fee_bps as u32,
+    )
+    .mx()?;
     require!(r.user_out >= min_quote_out, AmmError::Slippage);
     let (br, qr, price, bump) = apply(&a.pool, &r, false, now)?;
 
@@ -320,12 +429,31 @@ pub fn sell_from_offer<'info>(ctx: Context<'info, ProtocolSwap<'info>>, base_in:
         quote_program: &a.quote_token_program,
     };
     // escrow authority signature is inherited from the offers program CPI
-    c.base_xfer(&a.source.to_account_info(), &c.base_vault.to_account_info(), &a.escrow_authority.to_account_info(), ctx.remaining_accounts, base_in, &[])?;
+    c.base_xfer(
+        &a.source.to_account_info(),
+        &c.base_vault.to_account_info(),
+        &a.escrow_authority.to_account_info(),
+        ctx.remaining_accounts,
+        base_in,
+        &[],
+    )?;
     let (b, m) = ([bump], a.mint.key());
     let ps = c.pool_seeds(&b, &m);
     let pool_ai = c.pool.to_account_info();
-    c.quote_xfer(&c.quote_vault.to_account_info(), &a.destination.to_account_info(), &pool_ai, r.user_out, &[&ps])?;
-    c.quote_xfer(&c.quote_vault.to_account_info(), &c.fee_vault.to_account_info(), &pool_ai, r.fee, &[&ps])?;
+    c.quote_xfer(
+        &c.quote_vault.to_account_info(),
+        &a.destination.to_account_info(),
+        &pool_ai,
+        r.user_out,
+        &[&ps],
+    )?;
+    c.quote_xfer(
+        &c.quote_vault.to_account_info(),
+        &c.fee_vault.to_account_info(),
+        &pool_ai,
+        r.fee,
+        &[&ps],
+    )?;
 
     emit!(Swapped {
         mint: m,
@@ -354,7 +482,10 @@ pub fn buy_with_ticket<'info>(
     require!(quote_in > 0, AmmError::InvalidAmount);
     let now = Clock::get()?.unix_timestamp;
     let a = &ctx.accounts;
-    require!(a.source.mint == a.quote_mint.key() && a.destination.mint == a.mint.key(), AmmError::AccountMismatch);
+    require!(
+        a.source.mint == a.quote_mint.key() && a.destination.mint == a.mint.key(),
+        AmmError::AccountMismatch
+    );
     let (base_r, quote_r) = pre_trade(&a.pool, now)?;
     let r = amm::buy(quote_in, base_r, quote_r, 0).mx()?;
     require!(r.user_out >= min_base_out, AmmError::Slippage);
@@ -371,10 +502,23 @@ pub fn buy_with_ticket<'info>(
         base_program: &a.base_token_program,
         quote_program: &a.quote_token_program,
     };
-    c.quote_xfer(&a.source.to_account_info(), &c.quote_vault.to_account_info(), &a.source_authority.to_account_info(), r.reserve_in, &[])?;
+    c.quote_xfer(
+        &a.source.to_account_info(),
+        &c.quote_vault.to_account_info(),
+        &a.source_authority.to_account_info(),
+        r.reserve_in,
+        &[],
+    )?;
     let (b, m) = ([bump], a.mint.key());
     let ps = c.pool_seeds(&b, &m);
-    c.base_xfer(&c.base_vault.to_account_info(), &a.destination.to_account_info(), &c.pool.to_account_info(), ctx.remaining_accounts, r.user_out, &[&ps])?;
+    c.base_xfer(
+        &c.base_vault.to_account_info(),
+        &a.destination.to_account_info(),
+        &c.pool.to_account_info(),
+        ctx.remaining_accounts,
+        r.user_out,
+        &[&ps],
+    )?;
 
     emit!(Swapped {
         mint: m,

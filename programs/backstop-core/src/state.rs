@@ -261,7 +261,9 @@ pub struct OracleConfig {
 }
 
 /// Lifetime fee accounting (invariant: collected == Σ components).
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default, PartialEq, Eq, InitSpace)]
+#[derive(
+    AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default, PartialEq, Eq, InitSpace,
+)]
 pub struct FeeStats {
     pub distributed: u64,
     pub to_chests: u64,
@@ -328,7 +330,9 @@ pub struct Treasury {
 }
 
 /// Bounds for one agent-tunable parameter.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default, PartialEq, Eq, InitSpace)]
+#[derive(
+    AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, Default, PartialEq, Eq, InitSpace,
+)]
 pub struct ParamBound {
     pub enabled: bool,
     pub min: u64,
@@ -355,8 +359,13 @@ pub struct AgentAuthority {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, Debug, PartialEq, Eq, InitSpace)]
 pub enum TimelockAction {
     /// Move lamports out of the treasury (emergency only).
-    TreasuryWithdraw { to: Pubkey, lamports: u64 },
-    SetRedemptionPaused { paused: bool },
+    TreasuryWithdraw {
+        to: Pubkey,
+        lamports: u64,
+    },
+    SetRedemptionPaused {
+        paused: bool,
+    },
 }
 
 #[account]
@@ -378,7 +387,12 @@ impl Market {
 
 impl Default for OracleConfig {
     fn default() -> Self {
-        Self { kind: 0, feed: Pubkey::default(), manual_quote_per_sol: 0, max_staleness_secs: 120 }
+        Self {
+            kind: 0,
+            feed: Pubkey::default(),
+            manual_quote_per_sol: 0,
+            max_staleness_secs: 120,
+        }
     }
 }
 

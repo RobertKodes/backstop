@@ -24,4 +24,7 @@ backstop-math = { workspace = true }
 backstop-hook = { path = "../../programs/transfer-hook", features = ["no-entrypoint"] }
 backstop-core = { path = "../../programs/backstop-core", features = ["no-entrypoint"] }
 backstop-amm = { path = "../../programs/backstop-amm", features = ["no-entrypoint"] }
+backstop-offers = { path = "../../programs/backstop-offers", features = ["no-entrypoint"] }
+backstop-chest = { path = "../../programs/backstop-chest", features = ["no-entrypoint"] }
+mock-lending = { path = "../../programs/mock-lending", features = ["no-entrypoint"] }
 mock-swap = { path = "../../programs/mock-swap", features = ["no-entrypoint"] }

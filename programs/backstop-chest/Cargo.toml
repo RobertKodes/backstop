@@ -1,0 +1,38 @@
+[package]
+name = "backstop-chest"
+version = "0.1.0"
+description = "BACKSTOP war chests: pooled USDC chests with share accounting, reward harvests, Auto-Absorb grants, the Shield pool and idle-yield adapters."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "backstop_chest"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "backstop-core/idl-build", "backstop-amm/idl-build", "backstop-hook/idl-build", "backstop-offers/idl-build", "mock-lending/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+# Real Kamino Lend adapter (see DECISIONS D-040). Mock adapter is always built.
+kamino = ["dep:solana-sha256-hasher"]
+
+[dependencies]
+anchor-lang = { workspace = true }
+anchor-spl = { workspace = true }
+backstop-math = { workspace = true }
+backstop-common = { workspace = true }
+backstop-hook = { path = "../transfer-hook", features = ["cpi"] }
+backstop-core = { path = "../backstop-core", features = ["cpi"] }
+backstop-amm = { path = "../backstop-amm", features = ["cpi"] }
+backstop-offers = { path = "../backstop-offers", features = ["cpi"] }
+mock-lending = { path = "../mock-lending", features = ["cpi"] }
+solana-sha256-hasher = { workspace = true, optional = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

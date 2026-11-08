@@ -611,6 +611,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "backstop-chest"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "backstop-amm",
+ "backstop-common",
+ "backstop-core",
+ "backstop-hook",
+ "backstop-math",
+ "backstop-offers",
+ "mock-lending",
+ "solana-sha256-hasher",
+]
+
+[[package]]
 name = "backstop-common"
 version = "0.1.0"
 dependencies = [
@@ -653,7 +669,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "backstop-tests"
+name = "backstop-offers"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
@@ -663,8 +679,25 @@ dependencies = [
  "backstop-core",
  "backstop-hook",
  "backstop-math",
+ "solana-sha256-hasher",
+]
+
+[[package]]
+name = "backstop-tests"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "backstop-amm",
+ "backstop-chest",
+ "backstop-common",
+ "backstop-core",
+ "backstop-hook",
+ "backstop-math",
+ "backstop-offers",
  "bytemuck",
  "litesvm",
+ "mock-lending",
  "mock-swap",
  "solana-keypair",
  "solana-message",
@@ -1914,6 +1947,14 @@ dependencies = [
  "keccak",
  "rand_core 0.6.4",
  "zeroize",
+]
+
+[[package]]
+name = "mock-lending"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
 ]
 
 [[package]]

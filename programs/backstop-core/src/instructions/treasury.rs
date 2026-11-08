@@ -13,11 +13,16 @@ use crate::state::{Market, Treasury};
 /// Treasury SOL backing the floor: lamports − rent − pending Shield fees.
 pub fn treasury_free_lamports(t: &AccountInfo, m: &Market) -> Result<u64> {
     let rent = Rent::get()?.minimum_balance(t.data_len());
-    Ok(t.lamports().saturating_sub(rent).saturating_sub(m.shield_lamports_pending))
+    Ok(t.lamports()
+        .saturating_sub(rent)
+        .saturating_sub(m.shield_lamports_pending))
 }
 
 /// Tokens that are claims on the treasury: supply minus the AMM reserve (D-030).
-pub fn circulating(mint: &InterfaceAccount<Mint>, amm_base_vault: &InterfaceAccount<TokenAccount>) -> u64 {
+pub fn circulating(
+    mint: &InterfaceAccount<Mint>,
+    amm_base_vault: &InterfaceAccount<TokenAccount>,
+) -> u64 {
     mint.supply.saturating_sub(amm_base_vault.amount)
 }
 
@@ -64,18 +69,32 @@ pub fn redeem(ctx: Context<Redeem>, amount: u64, min_lamports_out: u64) -> Resul
     require!(circ > 0, CoreError::NothingToRedeem);
     let treasury_ai = a.treasury.to_account_info();
     let free = treasury_free_lamports(&treasury_ai, &a.market)?;
-    let (gross, fee, net) = redemption(amount, free, circ, a.market.params.redemption_fee_bps as u32).mx()?;
+    let (gross, fee, net) = redemption(
+        amount,
+        free,
+        circ,
+        a.market.params.redemption_fee_bps as u32,
+    )
+    .mx()?;
     require!(net >= min_lamports_out, CoreError::RedemptionSlippage);
 
     token_interface::burn(
         CpiContext::new(
             a.token_program.key(),
-            Burn { mint: a.mint.to_account_info(), from: a.user_token.to_account_info(), authority: a.user.to_account_info() },
+            Burn {
+                mint: a.mint.to_account_info(),
+                from: a.user_token.to_account_info(),
+                authority: a.user.to_account_info(),
+            },
         ),
         amount,
     )?;
     // Burns bypass the transfer hook: report the exit so tenure resets.
-    let mseeds: [&[u8]; 3] = [seeds::MARKET, a.market.mint.as_ref(), core::slice::from_ref(&a.market.bump)];
+    let mseeds: [&[u8]; 3] = [
+        seeds::MARKET,
+        a.market.mint.as_ref(),
+        core::slice::from_ref(&a.market.bump),
+    ];
     backstop_hook::cpi::record_burn(
         CpiContext::new_with_signer(
             ids::HOOK,

@@ -1,5 +1,7 @@
 //! Phase 2: AMM with fee routing and the on-chain TWAP.
 
+#![allow(clippy::result_large_err, clippy::manual_range_contains)] // test-only
+
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::{InstructionData, ToAccountMetas};
@@ -33,7 +35,11 @@ fn buy_routes_fee_and_keeps_k() {
     let p1 = env.pool(&m.mint);
     assert!(k(p1.base_reserve, p1.quote_reserve) >= k0);
     let fee_vault = env.market(&m.mint).fee_vault;
-    assert_eq!(env.token_balance(&fee_vault), 30 * USDC, "3 % fee to the core fee vault");
+    assert_eq!(
+        env.token_balance(&fee_vault),
+        30 * USDC,
+        "3 % fee to the core fee vault"
+    );
     let got = env.token_balance(&Env::ata(&user.pubkey(), &m.mint));
     assert_eq!(got, p0.base_reserve - p1.base_reserve);
     let h = env.holder(&m.mint, &user.pubkey()).unwrap();
@@ -61,7 +67,10 @@ fn direct_sell_rules() {
     assert!(bal > 2 * min_offer);
 
     // unregistered wallets cannot sell directly (per-wallet cap needs a holder)
-    assert_fails_with(env.sell(&m, &user, min_offer / 10), "DirectSellRequiresHolder");
+    assert_fails_with(
+        env.sell(&m, &user, min_offer / 10),
+        "DirectSellRequiresHolder",
+    );
     env.register(&user, &m.mint).unwrap();
 
     // at or above the minimum offer size → must use the offer book
@@ -77,7 +86,10 @@ fn direct_sell_rules() {
     assert_eq!(h.acc.get(), 0, "a sell resets tenure");
 
     // per-wallet rolling cap (hook): another sell pushing past the cap fails
-    assert_fails_with(env.sell(&m, &user, min_offer / 2 + 1), "DirectSellCapExceeded");
+    assert_fails_with(
+        env.sell(&m, &user, min_offer / 2 + 1),
+        "DirectSellCapExceeded",
+    );
     // …but the window resets after 24 h
     env.warp(86_401);
     env.sell(&m, &user, min_offer / 2).unwrap();
@@ -88,7 +100,10 @@ fn global_hourly_cap_on_direct_sells() {
     let mut env = Env::new();
     let mut params = backstop_core::state::MarketParams::defaults(defaults::TOTAL_SUPPLY, 6);
     params.direct_sell_hourly_cap = params.min_offer_size; // tiny global cap
-    let m = env.genesis(GenesisOpts { params: Some(params), ..Default::default() });
+    let m = env.genesis(GenesisOpts {
+        params: Some(params),
+        ..Default::default()
+    });
     let min_offer = params.min_offer_size;
     let mut sellers = vec![];
     for _ in 0..3 {
@@ -98,7 +113,10 @@ fn global_hourly_cap_on_direct_sells() {
         sellers.push(u);
     }
     env.sell(&m, &sellers[0], min_offer * 6 / 10).unwrap();
-    assert_fails_with(env.sell(&m, &sellers[1], min_offer * 6 / 10), "DirectSellHourlyCap");
+    assert_fails_with(
+        env.sell(&m, &sellers[1], min_offer * 6 / 10),
+        "DirectSellHourlyCap",
+    );
     env.warp(3_601);
     env.sell(&m, &sellers[1], min_offer * 6 / 10).unwrap();
 }
@@ -125,7 +143,10 @@ fn twap_tracks_price_with_time_weighting() {
     let spot = o.last_price;
     let twap_now = o.twap(now, 300, 0).unwrap();
     assert!(spot > 3 * p0, "spot moved a lot");
-    assert!(twap_now < spot / 2, "TWAP resists a fresh spike: twap {twap_now} spot {spot}");
+    assert!(
+        twap_now < spot / 2,
+        "TWAP resists a fresh spike: twap {twap_now} spot {spot}"
+    );
     assert!(twap_then > 0 && twap_then <= twap_now);
 }
 
@@ -138,7 +159,12 @@ fn protocol_swaps_require_offers_escrow_signature() {
     let market = env.market(&m.mint);
     let ix = Instruction::new_with_bytes(
         ids::AMM,
-        &backstop_amm::instruction::BuyWithTicket { quote_in: 100 * USDC, min_base_out: 0, max_base_out: u64::MAX }.data(),
+        &backstop_amm::instruction::BuyWithTicket {
+            quote_in: 100 * USDC,
+            min_base_out: 0,
+            max_base_out: u64::MAX,
+        }
+        .data(),
         backstop_amm::accounts::ProtocolSwap {
             escrow_authority: attacker.pubkey(),
             trader: attacker.pubkey(),
@@ -149,7 +175,11 @@ fn protocol_swaps_require_offers_escrow_signature() {
             base_vault: Env::ata(&pool, &m.mint),
             quote_vault: get_associated_token_address_with_program_id(&pool, &m.quote, &ids::TOKEN),
             fee_vault: market.fee_vault,
-            source: get_associated_token_address_with_program_id(&attacker.pubkey(), &m.quote, &ids::TOKEN),
+            source: get_associated_token_address_with_program_id(
+                &attacker.pubkey(),
+                &m.quote,
+                &ids::TOKEN,
+            ),
             destination: Env::ata(&attacker.pubkey(), &m.mint),
             source_authority: attacker.pubkey(),
             base_token_program: ids::TOKEN_2022,
@@ -185,8 +215,15 @@ fn round_trip_costs_fees_and_k_monotone() {
         last_k = kk;
     }
     let p = env.pool(&m.mint);
-    let vault_q = env.token_balance(&get_associated_token_address_with_program_id(&pda::pool(&m.mint).0, &m.quote, &ids::TOKEN));
+    let vault_q = env.token_balance(&get_associated_token_address_with_program_id(
+        &pda::pool(&m.mint).0,
+        &m.quote,
+        &ids::TOKEN,
+    ));
     assert_eq!(vault_q, p.quote_reserve, "quote vault == tracked reserve");
-    assert_eq!(env.token_balance(&Env::ata(&pda::pool(&m.mint).0, &m.mint)), p.base_reserve);
+    assert_eq!(
+        env.token_balance(&Env::ata(&pda::pool(&m.mint).0, &m.mint)),
+        p.base_reserve
+    );
     let _ = Pubkey::default();
 }

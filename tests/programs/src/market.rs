@@ -36,7 +36,11 @@ pub struct GenesisOpts {
 impl Default for GenesisOpts {
     fn default() -> Self {
         // 1B tokens against 100k USDC → 0.0001 USDC per token
-        Self { supply: defaults::TOTAL_SUPPLY, quote_liquidity: 100_000 * USDC, params: None }
+        Self {
+            supply: defaults::TOTAL_SUPPLY,
+            quote_liquidity: 100_000 * USDC,
+            params: None,
+        }
     }
 }
 
@@ -48,23 +52,56 @@ impl Env {
         let space = spl_token::state::Mint::LEN;
         let rent = self.svm.minimum_balance_for_rent_exemption(space);
         let ixs = vec![
-            system_instruction::create_account(&self.payer.pubkey(), &mint.pubkey(), rent, space as u64, &ids::TOKEN),
-            spl_token::instruction::initialize_mint2(&ids::TOKEN, &mint.pubkey(), authority, None, decimals).unwrap(),
+            system_instruction::create_account(
+                &self.payer.pubkey(),
+                &mint.pubkey(),
+                rent,
+                space as u64,
+                &ids::TOKEN,
+            ),
+            spl_token::instruction::initialize_mint2(
+                &ids::TOKEN,
+                &mint.pubkey(),
+                authority,
+                None,
+                decimals,
+            )
+            .unwrap(),
         ];
         self.send_ok(&ixs, &[&mint]);
         mint.pubkey()
     }
 
-    pub fn mint_classic(&mut self, mint: &Pubkey, authority: &Keypair, owner: &Pubkey, amount: u64) -> Pubkey {
+    pub fn mint_classic(
+        &mut self,
+        mint: &Pubkey,
+        authority: &Keypair,
+        owner: &Pubkey,
+        amount: u64,
+    ) -> Pubkey {
         let ata = self.create_ata_with_program(owner, mint, &ids::TOKEN);
-        let ix = spl_token::instruction::mint_to(&ids::TOKEN, mint, &ata, &authority.pubkey(), &[], amount).unwrap();
+        let ix = spl_token::instruction::mint_to(
+            &ids::TOKEN,
+            mint,
+            &ata,
+            &authority.pubkey(),
+            &[],
+            amount,
+        )
+        .unwrap();
         self.send_ok(&[ix], &[authority]);
         ata
     }
 
     // ---------- genesis ----------
 
-    pub fn init_market_ix(&self, mint: &Pubkey, quote: &Pubkey, authority: &Pubkey, args: backstop_core::instructions::InitMarketArgs) -> Instruction {
+    pub fn init_market_ix(
+        &self,
+        mint: &Pubkey,
+        quote: &Pubkey,
+        authority: &Pubkey,
+        args: backstop_core::instructions::InitMarketArgs,
+    ) -> Instruction {
         let market = pda::market(mint).0;
         let treasury = pda::treasury(mint).0;
         Instruction::new_with_bytes(
@@ -78,8 +115,16 @@ impl Env {
                 quote_mint: *quote,
                 market,
                 treasury,
-                fee_vault: get_associated_token_address_with_program_id(&market, quote, &ids::TOKEN),
-                treasury_quote_vault: get_associated_token_address_with_program_id(&treasury, quote, &ids::TOKEN),
+                fee_vault: get_associated_token_address_with_program_id(
+                    &market,
+                    quote,
+                    &ids::TOKEN,
+                ),
+                treasury_quote_vault: get_associated_token_address_with_program_id(
+                    &treasury,
+                    quote,
+                    &ids::TOKEN,
+                ),
                 parent_vault: pda::parent_vault(mint).0,
                 quote_token_program: ids::TOKEN,
                 associated_token_program: anchor_spl::associated_token::ID,
@@ -89,13 +134,23 @@ impl Env {
         )
     }
 
-    pub fn market_args(&self, keeper: &Pubkey, guardian: &Pubkey, params: Option<MarketParams>) -> backstop_core::instructions::InitMarketArgs {
+    pub fn market_args(
+        &self,
+        keeper: &Pubkey,
+        guardian: &Pubkey,
+        params: Option<MarketParams>,
+    ) -> backstop_core::instructions::InitMarketArgs {
         backstop_core::instructions::InitMarketArgs {
             governance: self.governance.pubkey(),
             guardian: *guardian,
             keeper: *keeper,
             swap_program: ids::MOCK_SWAP,
-            oracle: OracleConfig { kind: 0, feed: Pubkey::default(), manual_quote_per_sol: QUOTE_PER_SOL, max_staleness_secs: 120 },
+            oracle: OracleConfig {
+                kind: 0,
+                feed: Pubkey::default(),
+                manual_quote_per_sol: QUOTE_PER_SOL,
+                max_staleness_secs: 120,
+            },
             params,
             parent: Pubkey::default(),
         }
@@ -136,11 +191,19 @@ impl Env {
         let ix = self.init_market_ix(&mint, &quote, &gov.pubkey(), args);
         self.send_ok(&[ix], &[&gov]);
         // seed liquidity from governance
-        let gov_quote = self.mint_classic(&quote, &quote_authority, &gov.pubkey(), opts.quote_liquidity);
+        let gov_quote = self.mint_classic(
+            &quote,
+            &quote_authority,
+            &gov.pubkey(),
+            opts.quote_liquidity,
+        );
         let pool = pda::pool(&mint).0;
         let ix = Instruction::new_with_bytes(
             ids::AMM,
-            &backstop_amm::instruction::InitPool { quote_amount: opts.quote_liquidity }.data(),
+            &backstop_amm::instruction::InitPool {
+                quote_amount: opts.quote_liquidity,
+            }
+            .data(),
             backstop_amm::accounts::InitPool {
                 payer: gov.pubkey(),
                 authority: gov.pubkey(),
@@ -149,7 +212,11 @@ impl Env {
                 quote_mint: quote,
                 pool,
                 amm_base_vault: Env::ata(&pool, &mint),
-                quote_vault: get_associated_token_address_with_program_id(&pool, &quote, &ids::TOKEN),
+                quote_vault: get_associated_token_address_with_program_id(
+                    &pool,
+                    &quote,
+                    &ids::TOKEN,
+                ),
                 payer_quote: gov_quote,
                 base_token_program: ids::TOKEN_2022,
                 quote_token_program: ids::TOKEN,
@@ -159,7 +226,13 @@ impl Env {
             .to_account_metas(None),
         );
         self.send_ok(&[ix], &[&gov]);
-        Mkt { mint, quote, quote_authority, keeper, guardian }
+        Mkt {
+            mint,
+            quote,
+            quote_authority,
+            keeper,
+            guardian,
+        }
     }
 
     pub fn market(&self, mint: &Pubkey) -> Market {
@@ -209,13 +282,29 @@ impl Env {
     pub fn buy_ix(&self, m: &Mkt, user: &Pubkey, quote_in: u64, min_out: u64) -> Instruction {
         let mut metas = self.swap_accounts(m, user).to_account_metas(None);
         metas.extend(hook_metas(&m.mint, &pda::pool(&m.mint).0, user));
-        Instruction::new_with_bytes(ids::AMM, &backstop_amm::instruction::Buy { quote_in, min_base_out: min_out }.data(), metas)
+        Instruction::new_with_bytes(
+            ids::AMM,
+            &backstop_amm::instruction::Buy {
+                quote_in,
+                min_base_out: min_out,
+            }
+            .data(),
+            metas,
+        )
     }
 
     pub fn sell_ix(&self, m: &Mkt, user: &Pubkey, base_in: u64, min_out: u64) -> Instruction {
         let mut metas = self.swap_accounts(m, user).to_account_metas(None);
         metas.extend(hook_metas(&m.mint, user, &pda::pool(&m.mint).0));
-        Instruction::new_with_bytes(ids::AMM, &backstop_amm::instruction::Sell { base_in, min_quote_out: min_out }.data(), metas)
+        Instruction::new_with_bytes(
+            ids::AMM,
+            &backstop_amm::instruction::Sell {
+                base_in,
+                min_quote_out: min_out,
+            }
+            .data(),
+            metas,
+        )
     }
 
     pub fn buy(&mut self, m: &Mkt, user: &Keypair, quote_in: u64) -> TxResult {

@@ -76,9 +76,18 @@ pub fn init_market(ctx: Context<InitMarket>, args: InitMarketArgs) -> Result<()>
     let mint = ctx.accounts.mint.key();
     let authority = ctx.accounts.authority.key();
     let is_child = authority == pda::launchpad().0;
-    require!(authority == ctx.accounts.hook_config.governance || is_child, CoreError::Unauthorized);
-    require!(is_child == (args.parent != Pubkey::default()), CoreError::InvalidParameter);
-    require!(args.governance != Pubkey::default(), CoreError::InvalidParameter);
+    require!(
+        authority == ctx.accounts.hook_config.governance || is_child,
+        CoreError::Unauthorized
+    );
+    require!(
+        is_child == (args.parent != Pubkey::default()),
+        CoreError::InvalidParameter
+    );
+    require!(
+        args.governance != Pubkey::default(),
+        CoreError::InvalidParameter
+    );
     let vm = verify_engine_mint(&ctx.accounts.mint.to_account_info())?;
 
     let quote_mint = ctx.accounts.quote_mint.key();
@@ -112,10 +121,14 @@ pub fn init_market(ctx: Context<InitMarket>, args: InitMarketArgs) -> Result<()>
     m.fee_vault = ctx.accounts.fee_vault.key();
     m.treasury_quote_vault = ctx.accounts.treasury_quote_vault.key();
     m.parent_vault = ctx.accounts.parent_vault.key();
-    m.holder_rewards_vault =
-        get_associated_token_address_with_program_id(&pda::rewards_vault_authority(&mint).0, &quote_mint, &quote_program);
+    m.holder_rewards_vault = get_associated_token_address_with_program_id(
+        &pda::rewards_vault_authority(&mint).0,
+        &quote_mint,
+        &quote_program,
+    );
     m.shield_rewards_vault = pda::shield_rewards_vault(&mint).0;
-    m.amm_base_vault = get_associated_token_address_with_program_id(&pda::pool(&mint).0, &mint, &ids::TOKEN_2022);
+    m.amm_base_vault =
+        get_associated_token_address_with_program_id(&pda::pool(&mint).0, &mint, &ids::TOKEN_2022);
     m.created_at = now;
 
     let t = &mut ctx.accounts.treasury;

@@ -59,7 +59,13 @@ pub mod backstop_core {
     pub fn init_agent(ctx: Context<InitAgent>, agent: Pubkey) -> Result<()> {
         instructions::governance::init_agent(ctx, agent)
     }
-    pub fn set_agent_bound(ctx: Context<GovernAgent>, param: ParamId, enabled: bool, min: u64, max: u64) -> Result<()> {
+    pub fn set_agent_bound(
+        ctx: Context<GovernAgent>,
+        param: ParamId,
+        enabled: bool,
+        min: u64,
+        max: u64,
+    ) -> Result<()> {
         instructions::governance::set_agent_bound(ctx, param, enabled, min, max)
     }
     pub fn set_agent(ctx: Context<GovernAgent>, agent: Pubkey, cooldown_secs: i64) -> Result<()> {
@@ -84,10 +90,17 @@ pub mod backstop_core {
     pub fn distribute_fees(ctx: Context<DistributeFees>) -> Result<()> {
         instructions::fees::distribute_fees(ctx)
     }
-    pub fn deposit_external_rewards(ctx: Context<DepositExternalRewards>, amount: u64) -> Result<()> {
+    pub fn deposit_external_rewards(
+        ctx: Context<DepositExternalRewards>,
+        amount: u64,
+    ) -> Result<()> {
         instructions::fees::deposit_external_rewards(ctx, amount)
     }
-    pub fn convert_treasury<'info>(ctx: Context<'info, ConvertTreasury<'info>>, amount_in: u64, swap_data: Vec<u8>) -> Result<()> {
+    pub fn convert_treasury<'info>(
+        ctx: Context<'info, ConvertTreasury<'info>>,
+        amount_in: u64,
+        swap_data: Vec<u8>,
+    ) -> Result<()> {
         instructions::fees::convert_treasury(ctx, amount_in, swap_data)
     }
     pub fn convert_parent_share<'info>(

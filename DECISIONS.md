@@ -268,3 +268,51 @@ non-dust transfers.
 ### D-032 · Rounding policy
 All rounding favours the protocol/pool/remaining participants: fees and lot
 costs round up, payouts round down, tracked totals stay ≥ the sum of claims.
+
+---
+
+## Offer book, chests, Shield and yield (Phases 3–6)
+
+### D-040 · Yield adapters: mock always, Kamino feature-gated, Marginfi documented only
+`YieldAdapter` is a trait inside the chest program. `MockAdapter`
+(`mock-lending`) is always built and fully tested. The Kamino Lend adapter is
+behind the `kamino` cargo feature: its reserve-layout offsets were written
+from the klend account definitions and **must be verified on a mainnet fork
+before enabling**; as a guard it checks the liquidity and collateral mints at
+the parsed offsets and refuses to operate if they do not match. The Marginfi
+fallback named in the spec is **not implemented** (interface ready, adapter
+id reserved) — tracked as a known gap.
+
+### D-041 · Offer remainder sale is a separate permissionless instruction
+Selling the unfilled remainder inside `settle` would run
+`chest → offers → amm → Token-2022 → hook` (stack depth 5, the hard limit).
+`settle` therefore only allocates, pays the seller and delivers the Shield
+slice; `sell_remainder` (depth 4) is cranked right after by the keeper — or by
+anyone.
+
+### D-042 · Adapter value is cached and refreshed by `rebalance`
+Chest share prices use the adapter value from the last `rebalance`/`unwind`
+(keeper runs it every epoch) instead of reading the lending market in every
+chest instruction. A deposit just before a refresh could capture a sliver of
+accrued yield, but deposits are locked 60 days with a 25 % early-exit penalty,
+so there is nothing to sandwich.
+
+### D-043 · Shield skips offers created during a pump
+`settle_offer` gives the Shield zero lots when the short TWAP exceeds the
+hourly TWAP by more than `shield_max_premium_bps` (default 20 %), so the
+pooled Shield is not the counterparty of pump-then-offer manipulation.
+
+### D-044 · Sellers must hold a registered holder account
+Offer creation reads the seller's tenure (carried 40 % to absorbers) and the
+self-fill ring; both live in the holder account, so it is required (the SDK
+registers wallets automatically). The self-fill window comes from the hook
+config (`link_window_secs`).
+
+### D-045 · Bids lock whole lots only
+A bid of `b` quote units locks `floor(b / lot_cost) × lot_cost`; the rest
+never leaves the wallet/chest. Bids below one lot are rejected.
+
+### D-046 · Shield principal ↔ chest moves are not withdrawals
+Locking chest USDC into the Shield and getting principal back after the lock
+neither pays the chest penalty nor restarts the chest lock; Shield fee rewards
+credited to the chest *are* deposit events (consistent with D-028).

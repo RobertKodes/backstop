@@ -4,7 +4,9 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::instruction::{AccountMeta, Instruction};
 use anchor_lang::solana_program::program::invoke_signed;
 use anchor_spl::associated_token::{self, AssociatedToken, Create};
-use anchor_spl::token_interface::{self, CloseAccount, Mint, SyncNative, TokenAccount, TokenInterface, TransferChecked};
+use anchor_spl::token_interface::{
+    self, CloseAccount, Mint, SyncNative, TokenAccount, TokenInterface, TransferChecked,
+};
 use backstop_common::{ids, seeds};
 use backstop_hook::program::BackstopHook;
 use backstop_math::fees::split;
@@ -17,7 +19,11 @@ use crate::state::{Market, Treasury};
 // ------------------------------------------------------------------ helpers
 
 fn market_seeds(m: &Market) -> [&[u8]; 3] {
-    [seeds::MARKET, m.mint.as_ref(), core::slice::from_ref(&m.bump)]
+    [
+        seeds::MARKET,
+        m.mint.as_ref(),
+        core::slice::from_ref(&m.bump),
+    ]
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -37,7 +43,12 @@ fn transfer_quote<'info>(
     token_interface::transfer_checked(
         CpiContext::new_with_signer(
             program.key(),
-            TransferChecked { from: from.clone(), mint: mint.clone(), to: to.clone(), authority: authority.clone() },
+            TransferChecked {
+                from: from.clone(),
+                mint: mint.clone(),
+                to: to.clone(),
+                authority: authority.clone(),
+            },
             signer,
         ),
         amount,
@@ -57,11 +68,23 @@ fn invoke_swap<'info>(
 ) -> Result<()> {
     let metas: Vec<AccountMeta> = route
         .iter()
-        .map(|a| AccountMeta { pubkey: a.key(), is_signer: a.is_signer || a.key() == *signer_key, is_writable: a.is_writable })
+        .map(|a| AccountMeta {
+            pubkey: a.key(),
+            is_signer: a.is_signer || a.key() == *signer_key,
+            is_writable: a.is_writable,
+        })
         .collect();
     let mut infos = route.to_vec();
     infos.push(swap_program.clone());
-    invoke_signed(&Instruction { program_id: swap_program.key(), accounts: metas, data }, &infos, &[signer_seeds])?;
+    invoke_signed(
+        &Instruction {
+            program_id: swap_program.key(),
+            accounts: metas,
+            data,
+        },
+        &infos,
+        &[signer_seeds],
+    )?;
     Ok(())
 }
 
@@ -114,12 +137,52 @@ pub fn distribute_fees(ctx: Context<DistributeFees>) -> Result<()> {
     let seeds = market_seeds(m);
     let signer: &[&[&[u8]]] = &[&seeds];
     let a = &ctx.accounts;
-    let (mint, auth, dec) = (a.quote_mint.to_account_info(), a.market.to_account_info(), a.quote_mint.decimals);
+    let (mint, auth, dec) = (
+        a.quote_mint.to_account_info(),
+        a.market.to_account_info(),
+        a.quote_mint.decimals,
+    );
     let from = a.fee_vault.to_account_info();
-    transfer_quote(&a.quote_token_program, &from, &mint, &a.holder_rewards_vault.to_account_info(), &auth, s.chest, dec, signer)?;
-    transfer_quote(&a.quote_token_program, &from, &mint, &a.shield_rewards_vault.to_account_info(), &auth, s.shield, dec, signer)?;
-    transfer_quote(&a.quote_token_program, &from, &mint, &a.treasury_quote_vault.to_account_info(), &auth, s.treasury, dec, signer)?;
-    transfer_quote(&a.quote_token_program, &from, &mint, &a.parent_vault.to_account_info(), &auth, s.parent, dec, signer)?;
+    transfer_quote(
+        &a.quote_token_program,
+        &from,
+        &mint,
+        &a.holder_rewards_vault.to_account_info(),
+        &auth,
+        s.chest,
+        dec,
+        signer,
+    )?;
+    transfer_quote(
+        &a.quote_token_program,
+        &from,
+        &mint,
+        &a.shield_rewards_vault.to_account_info(),
+        &auth,
+        s.shield,
+        dec,
+        signer,
+    )?;
+    transfer_quote(
+        &a.quote_token_program,
+        &from,
+        &mint,
+        &a.treasury_quote_vault.to_account_info(),
+        &auth,
+        s.treasury,
+        dec,
+        signer,
+    )?;
+    transfer_quote(
+        &a.quote_token_program,
+        &from,
+        &mint,
+        &a.parent_vault.to_account_info(),
+        &auth,
+        s.parent,
+        dec,
+        signer,
+    )?;
     if s.chest > 0 {
         backstop_hook::cpi::deposit_rewards(
             CpiContext::new_with_signer(
@@ -202,7 +265,11 @@ pub fn deposit_external_rewards(ctx: Context<DepositExternalRewards>, amount: u6
         ),
         amount,
     )?;
-    emit!(ExternalRewardsDeposited { mint: a.market.mint, from: a.depositor.key(), amount });
+    emit!(ExternalRewardsDeposited {
+        mint: a.market.mint,
+        from: a.depositor.key(),
+        amount
+    });
     Ok(())
 }
 
@@ -244,11 +311,21 @@ pub struct ConvertTreasury<'info> {
 /// Keeper: convert treasury-share quote tokens to SOL held by the treasury
 /// PDA. Route accounts are passed as remaining accounts (ignored when the
 /// quote is wSOL, which only needs unwrapping).
-pub fn convert_treasury<'info>(mut ctx: Context<'info, ConvertTreasury<'info>>, amount_in: u64, swap_data: Vec<u8>) -> Result<()> {
+pub fn convert_treasury<'info>(
+    mut ctx: Context<'info, ConvertTreasury<'info>>,
+    amount_in: u64,
+    swap_data: Vec<u8>,
+) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
     let a = &ctx.accounts;
-    require!(amount_in > 0 && amount_in <= a.treasury_quote_vault.amount, CoreError::InvalidParameter);
-    require!(amount_in <= a.market.params.max_swap_chunk, CoreError::SwapTooLarge);
+    require!(
+        amount_in > 0 && amount_in <= a.treasury_quote_vault.amount,
+        CoreError::InvalidParameter
+    );
+    require!(
+        amount_in <= a.market.params.max_swap_chunk,
+        CoreError::SwapTooLarge
+    );
     let mint_key = a.market.mint;
     let tbump = [a.market.treasury_bump];
     let t_seeds: [&[u8]; 3] = [seeds::TREASURY, mint_key.as_ref(), &tbump];
@@ -286,14 +363,28 @@ pub fn convert_treasury<'info>(mut ctx: Context<'info, ConvertTreasury<'info>>, 
         )?;
         (amount_in, amount_in, amount_in)
     } else {
-        invoke_swap(&a.swap_program.to_account_info(), ctx.remaining_accounts, swap_data, &treasury_ai.key(), &t_seeds)?;
+        invoke_swap(
+            &a.swap_program.to_account_info(),
+            ctx.remaining_accounts,
+            swap_data,
+            &treasury_ai.key(),
+            &t_seeds,
+        )?;
         let a = &mut ctx.accounts;
         a.treasury_quote_vault.reload()?;
         assert_vault_clean(&a.treasury_quote_vault, &a.treasury.key())?;
-        let spent = before_in.checked_sub(a.treasury_quote_vault.amount).ok_or(CoreError::MathOverflow)?;
+        let spent = before_in
+            .checked_sub(a.treasury_quote_vault.amount)
+            .ok_or(CoreError::MathOverflow)?;
         require!(spent <= amount_in, CoreError::InvalidParameter);
-        let received = wsol_balance(&a.temp_wsol.to_account_info())?.checked_sub(before_out).ok_or(CoreError::MathOverflow)?;
-        let price = quote_per_sol(&a.market.oracle, a.oracle_feed.as_ref().map(|f| f.as_ref()), now)?;
+        let received = wsol_balance(&a.temp_wsol.to_account_info())?
+            .checked_sub(before_out)
+            .ok_or(CoreError::MathOverflow)?;
+        let price = quote_per_sol(
+            &a.market.oracle,
+            a.oracle_feed.as_ref().map(|f| f.as_ref()),
+            now,
+        )?;
         let min_out = min_lamports_out(spent, price, a.market.params.max_swap_slippage_bps)?;
         require!(received >= min_out, CoreError::SwapSlippage);
         (spent, received, min_out)
@@ -303,7 +394,11 @@ pub fn convert_treasury<'info>(mut ctx: Context<'info, ConvertTreasury<'info>>, 
     let a = &ctx.accounts;
     token_interface::close_account(CpiContext::new_with_signer(
         a.wsol_token_program.key(),
-        CloseAccount { account: a.temp_wsol.to_account_info(), destination: treasury_ai.clone(), authority: treasury_ai.clone() },
+        CloseAccount {
+            account: a.temp_wsol.to_account_info(),
+            destination: treasury_ai.clone(),
+            authority: treasury_ai.clone(),
+        },
         &[&t_seeds],
     ))?;
     **treasury_ai.try_borrow_mut_lamports()? -= temp_rent;
@@ -311,7 +406,14 @@ pub fn convert_treasury<'info>(mut ctx: Context<'info, ConvertTreasury<'info>>, 
 
     let m = &mut ctx.accounts.market;
     m.treasury_sol_in = m.treasury_sol_in.saturating_add(received);
-    emit!(FeeSwap { mint: m.mint, kind: 0, amount_in: spent, amount_out: received, oracle_min_out: min_out, ts: now });
+    emit!(FeeSwap {
+        mint: m.mint,
+        kind: 0,
+        amount_in: spent,
+        amount_out: received,
+        oracle_min_out: min_out,
+        ts: now
+    });
     Ok(())
 }
 
@@ -350,23 +452,46 @@ pub struct ConvertParentShare<'info> {
 /// quote (USDC), deliver it to the parent's holder-rewards vault and record it
 /// in the parent's tenure-weighted accumulator ("30 % of child fees to
 /// BACKSTOP chests").
-pub fn convert_parent_share<'info>(mut ctx: Context<'info, ConvertParentShare<'info>>, amount_in: u64, swap_data: Vec<u8>) -> Result<()> {
+pub fn convert_parent_share<'info>(
+    mut ctx: Context<'info, ConvertParentShare<'info>>,
+    amount_in: u64,
+    swap_data: Vec<u8>,
+) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
     let a = &ctx.accounts;
-    require!(amount_in > 0 && amount_in <= a.parent_vault.amount, CoreError::InvalidParameter);
+    require!(
+        amount_in > 0 && amount_in <= a.parent_vault.amount,
+        CoreError::InvalidParameter
+    );
     let before_in = a.parent_vault.amount;
     let before_out = a.parent_rewards_vault.amount;
     let seeds = market_seeds(&a.market);
-    invoke_swap(&a.swap_program.to_account_info(), ctx.remaining_accounts, swap_data, &a.market.key(), &seeds)?;
+    invoke_swap(
+        &a.swap_program.to_account_info(),
+        ctx.remaining_accounts,
+        swap_data,
+        &a.market.key(),
+        &seeds,
+    )?;
     let a = &mut ctx.accounts;
     a.parent_vault.reload()?;
     a.parent_rewards_vault.reload()?;
     assert_vault_clean(&a.parent_vault, &a.market.key())?;
-    let spent = before_in.checked_sub(a.parent_vault.amount).ok_or(CoreError::MathOverflow)?;
+    let spent = before_in
+        .checked_sub(a.parent_vault.amount)
+        .ok_or(CoreError::MathOverflow)?;
     require!(spent <= amount_in, CoreError::InvalidParameter);
-    let received = a.parent_rewards_vault.amount.checked_sub(before_out).ok_or(CoreError::MathOverflow)?;
+    let received = a
+        .parent_rewards_vault
+        .amount
+        .checked_sub(before_out)
+        .ok_or(CoreError::MathOverflow)?;
     // Child quote is SOL; parent quote is USDC → price in USDC per SOL.
-    let price = quote_per_sol(&a.parent_market.oracle, a.oracle_feed.as_ref().map(|f| f.as_ref()), now)?;
+    let price = quote_per_sol(
+        &a.parent_market.oracle,
+        a.oracle_feed.as_ref().map(|f| f.as_ref()),
+        now,
+    )?;
     let min_out = min_quote_out(spent, price, a.market.params.max_swap_slippage_bps)?;
     require!(received >= min_out, CoreError::SwapSlippage);
     let pseeds = market_seeds(&a.parent_market);
@@ -382,7 +507,14 @@ pub fn convert_parent_share<'info>(mut ctx: Context<'info, ConvertParentShare<'i
         ),
         received,
     )?;
-    emit!(FeeSwap { mint: a.market.mint, kind: 1, amount_in: spent, amount_out: received, oracle_min_out: min_out, ts: now });
+    emit!(FeeSwap {
+        mint: a.market.mint,
+        kind: 1,
+        amount_in: spent,
+        amount_out: received,
+        oracle_min_out: min_out,
+        ts: now
+    });
     Ok(())
 }
 
@@ -425,7 +557,10 @@ pub fn convert_shield_lamports<'info>(
 ) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
     let a = &ctx.accounts;
-    require!(lamports > 0 && lamports <= a.market.shield_lamports_pending, CoreError::InvalidParameter);
+    require!(
+        lamports > 0 && lamports <= a.market.shield_lamports_pending,
+        CoreError::InvalidParameter
+    );
     let mint_key = a.market.mint;
     let tbump = [a.market.treasury_bump];
     let t_seeds: [&[u8]; 3] = [seeds::TREASURY, mint_key.as_ref(), &tbump];
@@ -445,7 +580,12 @@ pub fn convert_shield_lamports<'info>(
     // wrap: move lamports from the treasury PDA into the wSOL account
     **treasury_ai.try_borrow_mut_lamports()? -= lamports;
     **a.temp_wsol.to_account_info().try_borrow_mut_lamports()? += lamports;
-    token_interface::sync_native(CpiContext::new(a.wsol_token_program.key(), SyncNative { account: a.temp_wsol.to_account_info() }))?;
+    token_interface::sync_native(CpiContext::new(
+        a.wsol_token_program.key(),
+        SyncNative {
+            account: a.temp_wsol.to_account_info(),
+        },
+    ))?;
     let before_out = a.shield_rewards_vault.amount;
     let (received, min_out) = if a.market.quote_mint == ids::WSOL {
         transfer_quote(
@@ -460,11 +600,25 @@ pub fn convert_shield_lamports<'info>(
         )?;
         (lamports, lamports)
     } else {
-        invoke_swap(&a.swap_program.to_account_info(), ctx.remaining_accounts, swap_data, &treasury_ai.key(), &t_seeds)?;
+        invoke_swap(
+            &a.swap_program.to_account_info(),
+            ctx.remaining_accounts,
+            swap_data,
+            &treasury_ai.key(),
+            &t_seeds,
+        )?;
         let a = &mut ctx.accounts;
         a.shield_rewards_vault.reload()?;
-        let received = a.shield_rewards_vault.amount.checked_sub(before_out).ok_or(CoreError::MathOverflow)?;
-        let price = quote_per_sol(&a.market.oracle, a.oracle_feed.as_ref().map(|f| f.as_ref()), now)?;
+        let received = a
+            .shield_rewards_vault
+            .amount
+            .checked_sub(before_out)
+            .ok_or(CoreError::MathOverflow)?;
+        let price = quote_per_sol(
+            &a.market.oracle,
+            a.oracle_feed.as_ref().map(|f| f.as_ref()),
+            now,
+        )?;
         let min_out = min_quote_out(lamports, price, a.market.params.max_swap_slippage_bps)?;
         require!(received >= min_out, CoreError::SwapSlippage);
         (received, min_out)
@@ -472,13 +626,24 @@ pub fn convert_shield_lamports<'info>(
     let a = &ctx.accounts;
     token_interface::close_account(CpiContext::new_with_signer(
         a.wsol_token_program.key(),
-        CloseAccount { account: a.temp_wsol.to_account_info(), destination: a.keeper.to_account_info(), authority: treasury_ai.clone() },
+        CloseAccount {
+            account: a.temp_wsol.to_account_info(),
+            destination: a.keeper.to_account_info(),
+            authority: treasury_ai.clone(),
+        },
         &[&t_seeds],
     ))?;
     // `close_account` returned the rent (and any dust) to the keeper who paid it.
     let _ = temp_rent;
     let m = &mut ctx.accounts.market;
     m.shield_lamports_pending -= lamports;
-    emit!(FeeSwap { mint: m.mint, kind: 2, amount_in: lamports, amount_out: received, oracle_min_out: min_out, ts: now });
+    emit!(FeeSwap {
+        mint: m.mint,
+        kind: 2,
+        amount_in: lamports,
+        amount_out: received,
+        oracle_min_out: min_out,
+        ts: now
+    });
     Ok(())
 }

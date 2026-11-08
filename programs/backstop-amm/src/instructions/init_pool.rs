@@ -57,7 +57,10 @@ pub struct InitPool<'info> {
 pub fn init_pool(ctx: Context<InitPool>, quote_amount: u64) -> Result<()> {
     let a = &ctx.accounts;
     let authority = a.authority.key();
-    require!(authority == a.market.governance || authority == pda::launchpad().0, AmmError::Unauthorized);
+    require!(
+        authority == a.market.governance || authority == pda::launchpad().0,
+        AmmError::Unauthorized
+    );
     let base = a.amm_base_vault.amount;
     require!(base > 0 && quote_amount > 0, AmmError::InvalidAmount);
 

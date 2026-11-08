@@ -62,7 +62,10 @@ impl Pool {
     pub fn oracle(&self) -> Oracle {
         let mut obs = [Observation::default(); OBSERVATIONS];
         for (o, p) in obs.iter_mut().zip(self.observations.iter()) {
-            *o = Observation { ts: p.ts, cumulative: p.cumulative.get() };
+            *o = Observation {
+                ts: p.ts,
+                cumulative: p.cumulative.get(),
+            };
         }
         Oracle {
             cumulative: self.oracle_cumulative.get(),

@@ -34,11 +34,19 @@ pub mod backstop_amm {
         instructions::init_pool::init_pool(ctx, quote_amount)
     }
 
-    pub fn buy<'info>(ctx: Context<'info, Swap<'info>>, quote_in: u64, min_base_out: u64) -> Result<u64> {
+    pub fn buy<'info>(
+        ctx: Context<'info, Swap<'info>>,
+        quote_in: u64,
+        min_base_out: u64,
+    ) -> Result<u64> {
         instructions::swap::buy(ctx, quote_in, min_base_out)
     }
 
-    pub fn sell<'info>(ctx: Context<'info, Swap<'info>>, base_in: u64, min_quote_out: u64) -> Result<u64> {
+    pub fn sell<'info>(
+        ctx: Context<'info, Swap<'info>>,
+        base_in: u64,
+        min_quote_out: u64,
+    ) -> Result<u64> {
         instructions::swap::sell(ctx, base_in, min_quote_out)
     }
 

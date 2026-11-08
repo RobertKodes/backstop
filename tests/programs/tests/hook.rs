@@ -1,5 +1,7 @@
 //! Integration tests for the transfer hook (Phase 1).
 
+#![allow(clippy::result_large_err, clippy::manual_range_contains)] // test-only
+
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::solana_program::instruction::{AccountMeta, Instruction};
 use anchor_lang::{InstructionData, ToAccountMetas};

@@ -1,6 +1,8 @@
 //! Phase 2/5: core market verification, governance, agent bounds, timelock,
 //! treasury floor and redemption.
 
+#![allow(clippy::result_large_err, clippy::manual_range_contains)] // test-only
+
 use anchor_lang::prelude::Pubkey;
 use anchor_lang::solana_program::instruction::Instruction;
 use anchor_lang::solana_program::system_instruction;
@@ -12,16 +14,26 @@ use backstop_tests::market::{GenesisOpts, Mkt, USDC};
 use backstop_tests::*;
 use t22::extension::ExtensionType;
 
-fn govern(env: &Env, mint: &Pubkey, signer: &Pubkey, data: Vec<u8>) -> Instruction {
+fn govern(_env: &Env, mint: &Pubkey, signer: &Pubkey, data: Vec<u8>) -> Instruction {
     Instruction::new_with_bytes(
         ids::CORE,
         &data,
-        backstop_core::accounts::Govern { governance: *signer, market: pda::market(mint).0 }.to_account_metas(None),
+        backstop_core::accounts::Govern {
+            governance: *signer,
+            market: pda::market(mint).0,
+        }
+        .to_account_metas(None),
     )
 }
 
 /// Engine mint with custom extensions/authorities for negative tests.
-fn custom_mint(env: &mut Env, freeze: bool, permanent_delegate: bool, hook_authority: bool, revoke: bool) -> Pubkey {
+fn custom_mint(
+    env: &mut Env,
+    freeze: bool,
+    permanent_delegate: bool,
+    hook_authority: bool,
+    revoke: bool,
+) -> Pubkey {
     let auth = env.wallet(2);
     let mint = Keypair::new();
     let mut exts = vec![ExtensionType::TransferHook];
@@ -30,14 +42,48 @@ fn custom_mint(env: &mut Env, freeze: bool, permanent_delegate: bool, hook_autho
     }
     let space = ExtensionType::try_calculate_account_len::<t22::state::Mint>(&exts).unwrap();
     let rent = env.svm.minimum_balance_for_rent_exemption(space);
-    let mut ixs = vec![system_instruction::create_account(&env.payer.pubkey(), &mint.pubkey(), rent, space as u64, &ids::TOKEN_2022)];
-    let hook_auth = if hook_authority { Some(auth.pubkey()) } else { None };
-    ixs.push(t22::extension::transfer_hook::instruction::initialize(&ids::TOKEN_2022, &mint.pubkey(), hook_auth, Some(ids::HOOK)).unwrap());
+    let mut ixs = vec![system_instruction::create_account(
+        &env.payer.pubkey(),
+        &mint.pubkey(),
+        rent,
+        space as u64,
+        &ids::TOKEN_2022,
+    )];
+    let hook_auth = if hook_authority {
+        Some(auth.pubkey())
+    } else {
+        None
+    };
+    ixs.push(
+        t22::extension::transfer_hook::instruction::initialize(
+            &ids::TOKEN_2022,
+            &mint.pubkey(),
+            hook_auth,
+            Some(ids::HOOK),
+        )
+        .unwrap(),
+    );
     if permanent_delegate {
-        ixs.push(t22::instruction::initialize_permanent_delegate(&ids::TOKEN_2022, &mint.pubkey(), &auth.pubkey()).unwrap());
+        ixs.push(
+            t22::instruction::initialize_permanent_delegate(
+                &ids::TOKEN_2022,
+                &mint.pubkey(),
+                &auth.pubkey(),
+            )
+            .unwrap(),
+        );
     }
     let freeze_auth = if freeze { Some(auth.pubkey()) } else { None };
-    ixs.push(t22::instruction::initialize_mint2(&ids::TOKEN_2022, &mint.pubkey(), &auth.pubkey(), freeze_auth.as_ref(), 9).unwrap());
+    ixs.push(
+        t22::instruction::initialize_mint2(
+            &ids::TOKEN_2022,
+            &mint.pubkey(),
+            &auth.pubkey(),
+            freeze_auth.as_ref(),
+            9,
+        )
+        .unwrap(),
+    );
     env.send_ok(&ixs, &[&mint]);
     let m = mint.pubkey();
     let args = env.default_hook_args();
@@ -45,8 +91,15 @@ fn custom_mint(env: &mut Env, freeze: bool, permanent_delegate: bool, hook_autho
     let vault = env.create_ata(&pda::pool(&m).0, &m);
     env.mint_to(&m, &auth, &vault, 1_000 * 1_000_000_000);
     if revoke {
-        let ix = t22::instruction::set_authority(&ids::TOKEN_2022, &m, None, t22::instruction::AuthorityType::MintTokens, &auth.pubkey(), &[])
-            .unwrap();
+        let ix = t22::instruction::set_authority(
+            &ids::TOKEN_2022,
+            &m,
+            None,
+            t22::instruction::AuthorityType::MintTokens,
+            &auth.pubkey(),
+            &[],
+        )
+        .unwrap();
         env.send_ok(&[ix], &[&auth]);
     }
     m
@@ -95,13 +148,40 @@ fn governance_params_and_validation() {
     let mut env = Env::new();
     let m = env.genesis(GenesisOpts::default());
     let gov = env.governance.insecure_clone();
-    let ix = govern(&env, &m.mint, &gov.pubkey(), backstop_core::instruction::SetParam { param: ParamId::YieldBufferBps, value: 2_500 }.data());
+    let ix = govern(
+        &env,
+        &m.mint,
+        &gov.pubkey(),
+        backstop_core::instruction::SetParam {
+            param: ParamId::YieldBufferBps,
+            value: 2_500,
+        }
+        .data(),
+    );
     env.send_ok(&[ix], &[&gov]);
     assert_eq!(env.market(&m.mint).params.yield_buffer_bps, 2_500);
-    let ix = govern(&env, &m.mint, &gov.pubkey(), backstop_core::instruction::SetParam { param: ParamId::TradeFeeBps, value: 5_000 }.data());
+    let ix = govern(
+        &env,
+        &m.mint,
+        &gov.pubkey(),
+        backstop_core::instruction::SetParam {
+            param: ParamId::TradeFeeBps,
+            value: 5_000,
+        }
+        .data(),
+    );
     assert_fails_with(env.send(&[ix], &[&gov]), "InvalidParameter");
     let outsider = env.wallet(1);
-    let ix = govern(&env, &m.mint, &outsider.pubkey(), backstop_core::instruction::SetParam { param: ParamId::YieldBufferBps, value: 1_500 }.data());
+    let ix = govern(
+        &env,
+        &m.mint,
+        &outsider.pubkey(),
+        backstop_core::instruction::SetParam {
+            param: ParamId::YieldBufferBps,
+            value: 1_500,
+        }
+        .data(),
+    );
     assert_fails_with(env.send(&[ix], &[&outsider]), "Unauthorized");
 }
 
@@ -110,7 +190,10 @@ fn setup_agent(env: &mut Env, m: &Mkt) -> Keypair {
     let agent = env.wallet(1);
     let ix = Instruction::new_with_bytes(
         ids::CORE,
-        &backstop_core::instruction::InitAgent { agent: agent.pubkey() }.data(),
+        &backstop_core::instruction::InitAgent {
+            agent: agent.pubkey(),
+        }
+        .data(),
         backstop_core::accounts::InitAgent {
             governance: gov.pubkey(),
             market: pda::market(&m.mint).0,
@@ -122,9 +205,19 @@ fn setup_agent(env: &mut Env, m: &Mkt) -> Keypair {
     env.send_ok(&[ix], &[&gov]);
     let ix = Instruction::new_with_bytes(
         ids::CORE,
-        &backstop_core::instruction::SetAgentBound { param: ParamId::YieldBufferBps, enabled: true, min: 1_500, max: 3_000 }.data(),
-        backstop_core::accounts::GovernAgent { governance: gov.pubkey(), market: pda::market(&m.mint).0, agent_authority: pda::agent(&m.mint).0 }
-            .to_account_metas(None),
+        &backstop_core::instruction::SetAgentBound {
+            param: ParamId::YieldBufferBps,
+            enabled: true,
+            min: 1_500,
+            max: 3_000,
+        }
+        .data(),
+        backstop_core::accounts::GovernAgent {
+            governance: gov.pubkey(),
+            market: pda::market(&m.mint).0,
+            agent_authority: pda::agent(&m.mint).0,
+        }
+        .to_account_metas(None),
     );
     env.send_ok(&[ix], &[&gov]);
     agent
@@ -134,8 +227,12 @@ fn agent_ix(m: &Mkt, agent: &Pubkey, param: ParamId, value: u64) -> Instruction 
     Instruction::new_with_bytes(
         ids::CORE,
         &backstop_core::instruction::AgentSetParam { param, value }.data(),
-        backstop_core::accounts::AgentSetParam { agent: *agent, market: pda::market(&m.mint).0, agent_authority: pda::agent(&m.mint).0 }
-            .to_account_metas(None),
+        backstop_core::accounts::AgentSetParam {
+            agent: *agent,
+            market: pda::market(&m.mint).0,
+            agent_authority: pda::agent(&m.mint).0,
+        }
+        .to_account_metas(None),
     )
 }
 
@@ -144,19 +241,69 @@ fn agent_is_bounded_and_rate_limited() {
     let mut env = Env::new();
     let m = env.genesis(GenesisOpts::default());
     let agent = setup_agent(&mut env, &m);
-    env.send_ok(&[agent_ix(&m, &agent.pubkey(), ParamId::YieldBufferBps, 2_200)], &[&agent]);
+    env.send_ok(
+        &[agent_ix(
+            &m,
+            &agent.pubkey(),
+            ParamId::YieldBufferBps,
+            2_200,
+        )],
+        &[&agent],
+    );
     assert_eq!(env.market(&m.mint).params.yield_buffer_bps, 2_200);
     // cooldown (1 h)
-    assert_fails_with(env.send(&[agent_ix(&m, &agent.pubkey(), ParamId::YieldBufferBps, 2_300)], &[&agent]), "Cooldown");
+    assert_fails_with(
+        env.send(
+            &[agent_ix(
+                &m,
+                &agent.pubkey(),
+                ParamId::YieldBufferBps,
+                2_300,
+            )],
+            &[&agent],
+        ),
+        "Cooldown",
+    );
     env.warp(3_601);
     // out of bounds
-    assert_fails_with(env.send(&[agent_ix(&m, &agent.pubkey(), ParamId::YieldBufferBps, 3_500)], &[&agent]), "OutOfBounds");
+    assert_fails_with(
+        env.send(
+            &[agent_ix(
+                &m,
+                &agent.pubkey(),
+                ParamId::YieldBufferBps,
+                3_500,
+            )],
+            &[&agent],
+        ),
+        "OutOfBounds",
+    );
     // not an agent-tunable parameter
-    assert_fails_with(env.send(&[agent_ix(&m, &agent.pubkey(), ParamId::TradeFeeBps, 250)], &[&agent]), "NotAgentTunable");
+    assert_fails_with(
+        env.send(
+            &[agent_ix(&m, &agent.pubkey(), ParamId::TradeFeeBps, 250)],
+            &[&agent],
+        ),
+        "NotAgentTunable",
+    );
     // impostor
     let imp = env.wallet(1);
-    assert_fails_with(env.send(&[agent_ix(&m, &imp.pubkey(), ParamId::YieldBufferBps, 2_000)], &[&imp]), "Unauthorized");
-    env.send_ok(&[agent_ix(&m, &agent.pubkey(), ParamId::YieldBufferBps, 3_000)], &[&agent]);
+    assert_fails_with(
+        env.send(
+            &[agent_ix(&m, &imp.pubkey(), ParamId::YieldBufferBps, 2_000)],
+            &[&imp],
+        ),
+        "Unauthorized",
+    );
+    env.send_ok(
+        &[agent_ix(
+            &m,
+            &agent.pubkey(),
+            ParamId::YieldBufferBps,
+            3_000,
+        )],
+        &[&agent],
+    );
 }
 
 #[test]
@@ -167,14 +314,24 @@ fn guardian_can_pause_but_not_unpause() {
         Instruction::new_with_bytes(
             ids::CORE,
             &backstop_core::instruction::SetPauses { pauses: flags }.data(),
-            backstop_core::accounts::SetPauses { signer: *signer, market: pda::market(&m.mint).0 }.to_account_metas(None),
+            backstop_core::accounts::SetPauses {
+                signer: *signer,
+                market: pda::market(&m.mint).0,
+            }
+            .to_account_metas(None),
         )
     };
     let g = m.guardian.insecure_clone();
     env.send_ok(&[pause_ix(&g.pubkey(), 1)], &[&g]);
     env.send_ok(&[pause_ix(&g.pubkey(), 3)], &[&g]);
-    assert_fails_with(env.send(&[pause_ix(&g.pubkey(), 1)], &[&g]), "GuardianCannotUnpause");
-    assert_fails_with(env.send(&[pause_ix(&g.pubkey(), 8)], &[&g]), "InvalidParameter");
+    assert_fails_with(
+        env.send(&[pause_ix(&g.pubkey(), 1)], &[&g]),
+        "GuardianCannotUnpause",
+    );
+    assert_fails_with(
+        env.send(&[pause_ix(&g.pubkey(), 8)], &[&g]),
+        "InvalidParameter",
+    );
     let gov = env.governance.insecure_clone();
     env.send_ok(&[pause_ix(&gov.pubkey(), 0)], &[&gov]);
     assert_eq!(env.market(&m.mint).pauses, 0);
@@ -183,7 +340,11 @@ fn guardian_can_pause_but_not_unpause() {
 fn redeem_ix(env: &Env, m: &Mkt, user: &Pubkey, amount: u64, min_out: u64) -> Instruction {
     Instruction::new_with_bytes(
         ids::CORE,
-        &backstop_core::instruction::Redeem { amount, min_lamports_out: min_out }.data(),
+        &backstop_core::instruction::Redeem {
+            amount,
+            min_lamports_out: min_out,
+        }
+        .data(),
         backstop_core::accounts::Redeem {
             user: *user,
             market: pda::market(&m.mint).0,
@@ -246,12 +407,23 @@ fn redemption_pays_pro_rata_floor_and_burns() {
     let sol_after = env.lamports(&a.pubkey());
     // payer pays the tx fee, so the user's balance rises by exactly net
     assert_eq!(sol_after - sol_before, gross - fee);
-    assert_eq!(env.token_balance(&Env::ata(&a.pubkey(), &m.mint)), bal_a - redeem_amt);
+    assert_eq!(
+        env.token_balance(&Env::ata(&a.pubkey(), &m.mint)),
+        bal_a - redeem_amt
+    );
     let d = env.account_data(&m.mint).unwrap();
-    assert_eq!(u64::from_le_bytes(d[36..44].try_into().unwrap()), supply_before - redeem_amt, "burned");
+    assert_eq!(
+        u64::from_le_bytes(d[36..44].try_into().unwrap()),
+        supply_before - redeem_amt,
+        "burned"
+    );
     let mk = env.market(&m.mint);
     assert_eq!(mk.shield_lamports_pending, fee);
-    assert_eq!(env.holder(&m.mint, &a.pubkey()).unwrap().acc.get(), 0, "redemption resets tenure");
+    assert_eq!(
+        env.holder(&m.mint, &a.pubkey()).unwrap().acc.get(),
+        0,
+        "redemption resets tenure"
+    );
 
     // slippage guard
     let ix = redeem_ix(&env, &m, &b.pubkey(), 1_000 * TOKEN_UNITS, u64::MAX);
@@ -300,10 +472,18 @@ fn redemption_pause_and_treasury_withdraw_need_48h_timelock() {
     env.buy(&m, &user, 1_000 * USDC).unwrap();
     donate(&mut env, &m, 10 * LAMPORTS_PER_SOL);
 
-    let q = queue_ix(&env, &m, 1, TimelockAction::SetRedemptionPaused { paused: true });
+    let q = queue_ix(
+        &env,
+        &m,
+        1,
+        TimelockAction::SetRedemptionPaused { paused: true },
+    );
     env.send_ok(&[q], &[&gov]);
     let gov_key = gov.pubkey();
-    assert_fails_with(env.send(&[exec_ix(&env, &m, 1, &gov_key)], &[]), "TimelockNotExpired");
+    assert_fails_with(
+        env.send(&[exec_ix(&env, &m, 1, &gov_key)], &[]),
+        "TimelockNotExpired",
+    );
     // redemption still works during the 48 h window
     let ix = redeem_ix(&env, &m, &user.pubkey(), 1_000 * TOKEN_UNITS, 0);
     env.send_ok(&[ix], &[&user]);
@@ -314,7 +494,15 @@ fn redemption_pause_and_treasury_withdraw_need_48h_timelock() {
 
     // treasury withdrawal also only via timelock
     let dest = env.wallet(0);
-    let q = queue_ix(&env, &m, 2, TimelockAction::TreasuryWithdraw { to: dest.pubkey(), lamports: LAMPORTS_PER_SOL });
+    let q = queue_ix(
+        &env,
+        &m,
+        2,
+        TimelockAction::TreasuryWithdraw {
+            to: dest.pubkey(),
+            lamports: LAMPORTS_PER_SOL,
+        },
+    );
     env.send_ok(&[q], &[&gov]);
     env.warp(48 * 3_600 + 1);
     let before = env.lamports(&dest.pubkey());

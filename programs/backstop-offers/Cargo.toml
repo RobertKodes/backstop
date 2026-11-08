@@ -1,0 +1,34 @@
+[package]
+name = "backstop-offers"
+version = "0.1.0"
+description = "BACKSTOP offer book: escrowed sell offers, randomised pro-rata settlement, Shield priority, AMM remainder routing and Return Tickets."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "backstop_offers"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "backstop-core/idl-build", "backstop-amm/idl-build", "backstop-hook/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = { workspace = true }
+anchor-spl = { workspace = true }
+solana-sha256-hasher = { workspace = true }
+backstop-math = { workspace = true }
+backstop-common = { workspace = true }
+backstop-hook = { path = "../transfer-hook", features = ["cpi"] }
+backstop-core = { path = "../backstop-core", features = ["cpi"] }
+backstop-amm = { path = "../backstop-amm", features = ["cpi"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
