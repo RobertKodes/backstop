@@ -24,6 +24,8 @@ pub use solana_signer::Signer;
 use solana_transaction::versioned::VersionedTransaction;
 use t22::extension::{ExtensionType, StateWithExtensionsOwned};
 
+pub mod market;
+
 pub const START_TS: i64 = 1_800_000_000;
 pub const LAMPORTS_PER_SOL: u64 = 1_000_000_000;
 

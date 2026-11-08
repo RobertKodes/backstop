@@ -1,0 +1,33 @@
+[package]
+name = "backstop-core"
+version = "0.1.0"
+description = "BACKSTOP core: market registry & parameters, fee distribution, SOL treasury & redemption floor, governance timelock and the AI agent's bounded authority."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "backstop_core"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "backstop-hook/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+# Parse Pyth PriceUpdateV2 accounts for swap slippage bounds (mainnet/devnet).
+pyth = []
+
+[dependencies]
+anchor-lang = { workspace = true }
+anchor-spl = { workspace = true }
+backstop-math = { workspace = true }
+backstop-common = { workspace = true }
+backstop-hook = { path = "../transfer-hook", features = ["cpi"] }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
