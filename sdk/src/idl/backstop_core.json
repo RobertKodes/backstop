@@ -1,0 +1,3751 @@
+{
+  "address": "AstnKdypNsaRAxX88cTCDCit11mCqeRRnQ2x6cfZJFzK",
+  "metadata": {
+    "name": "backstop_core",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "BACKSTOP core: market registry & parameters, fee distribution, SOL treasury & redemption floor, governance timelock and the AI agent's bounded authority."
+  },
+  "instructions": [
+    {
+      "name": "accept_governance",
+      "discriminator": [
+        248,
+        124,
+        36,
+        211,
+        224,
+        191,
+        79,
+        227
+      ],
+      "accounts": [
+        {
+          "name": "new_governance",
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "agent_set_param",
+      "discriminator": [
+        131,
+        49,
+        139,
+        240,
+        110,
+        160,
+        41,
+        80
+      ],
+      "accounts": [
+        {
+          "name": "agent",
+          "signer": true,
+          "relations": [
+            "agent_authority"
+          ]
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent_authority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  103,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "param",
+          "type": {
+            "defined": {
+              "name": "ParamId"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cancel_action",
+      "discriminator": [
+        228,
+        144,
+        170,
+        146,
+        66,
+        88,
+        133,
+        128
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          },
+          "relations": [
+            "queued"
+          ]
+        },
+        {
+          "name": "queued",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "convert_parent_share",
+      "discriminator": [
+        251,
+        173,
+        12,
+        104,
+        158,
+        242,
+        66,
+        243
+      ],
+      "accounts": [
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "parent_market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.parent",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "parent_vault",
+          "writable": true
+        },
+        {
+          "name": "parent_rewards_vault",
+          "writable": true
+        },
+        {
+          "name": "parent_hook_config"
+        },
+        {
+          "name": "parent_reward_state",
+          "writable": true
+        },
+        {
+          "name": "hook_program",
+          "address": "g86T56A9yM46y5cyVCVzB1K6MtV5cx89DsFiapy59eP"
+        },
+        {
+          "name": "oracle_feed",
+          "optional": true
+        },
+        {
+          "name": "swap_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_in",
+          "type": "u64"
+        },
+        {
+          "name": "swap_data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "convert_shield_lamports",
+      "discriminator": [
+        120,
+        113,
+        76,
+        210,
+        24,
+        69,
+        84,
+        115
+      ],
+      "accounts": [
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "wsol_mint",
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "temp_wsol",
+          "writable": true
+        },
+        {
+          "name": "shield_rewards_vault",
+          "writable": true
+        },
+        {
+          "name": "oracle_feed",
+          "optional": true
+        },
+        {
+          "name": "swap_program"
+        },
+        {
+          "name": "wsol_token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "lamports",
+          "type": "u64"
+        },
+        {
+          "name": "swap_data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "convert_treasury",
+      "discriminator": [
+        198,
+        109,
+        5,
+        248,
+        181,
+        138,
+        132,
+        91
+      ],
+      "accounts": [
+        {
+          "name": "keeper",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "treasury_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "wsol_mint",
+          "address": "So11111111111111111111111111111111111111112"
+        },
+        {
+          "name": "temp_wsol",
+          "writable": true
+        },
+        {
+          "name": "oracle_feed",
+          "optional": true
+        },
+        {
+          "name": "swap_program"
+        },
+        {
+          "name": "quote_token_program"
+        },
+        {
+          "name": "wsol_token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount_in",
+          "type": "u64"
+        },
+        {
+          "name": "swap_data",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "deposit_external_rewards",
+      "discriminator": [
+        3,
+        144,
+        174,
+        108,
+        2,
+        163,
+        86,
+        171
+      ],
+      "accounts": [
+        {
+          "name": "depositor",
+          "signer": true
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "depositor_token",
+          "writable": true
+        },
+        {
+          "name": "holder_rewards_vault",
+          "writable": true
+        },
+        {
+          "name": "hook_config"
+        },
+        {
+          "name": "reward_state",
+          "writable": true
+        },
+        {
+          "name": "hook_program",
+          "address": "g86T56A9yM46y5cyVCVzB1K6MtV5cx89DsFiapy59eP"
+        },
+        {
+          "name": "quote_token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "distribute_fees",
+      "discriminator": [
+        120,
+        56,
+        27,
+        7,
+        53,
+        176,
+        113,
+        186
+      ],
+      "accounts": [
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "fee_vault",
+          "writable": true
+        },
+        {
+          "name": "holder_rewards_vault",
+          "writable": true
+        },
+        {
+          "name": "shield_rewards_vault",
+          "writable": true
+        },
+        {
+          "name": "treasury_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "parent_vault",
+          "writable": true
+        },
+        {
+          "name": "hook_config"
+        },
+        {
+          "name": "reward_state",
+          "writable": true
+        },
+        {
+          "name": "hook_program",
+          "address": "g86T56A9yM46y5cyVCVzB1K6MtV5cx89DsFiapy59eP"
+        },
+        {
+          "name": "quote_token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "donate_treasury",
+      "discriminator": [
+        109,
+        97,
+        17,
+        162,
+        126,
+        101,
+        52,
+        169
+      ],
+      "accounts": [
+        {
+          "name": "donor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "lamports",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "execute_action",
+      "discriminator": [
+        246,
+        137,
+        105,
+        113,
+        247,
+        6,
+        223,
+        174
+      ],
+      "accounts": [
+        {
+          "name": "executor",
+          "docs": [
+            "Anyone may execute once the timelock has expired."
+          ],
+          "signer": true
+        },
+        {
+          "name": "governance",
+          "writable": true
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          },
+          "relations": [
+            "queued"
+          ]
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "queued",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  109,
+                  101,
+                  108,
+                  111,
+                  99,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              },
+              {
+                "kind": "account",
+                "path": "queued.id",
+                "account": "QueuedAction"
+              }
+            ]
+          }
+        },
+        {
+          "name": "destination",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "init_agent",
+      "discriminator": [
+        80,
+        124,
+        209,
+        4,
+        194,
+        195,
+        51,
+        49
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent_authority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  103,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "agent",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "init_market",
+      "discriminator": [
+        33,
+        253,
+        15,
+        116,
+        89,
+        25,
+        127,
+        236
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Hook governance (root markets) or the launchpad authority PDA (children)."
+          ],
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                10,
+                5,
+                172,
+                55,
+                36,
+                59,
+                39,
+                107,
+                223,
+                29,
+                192,
+                239,
+                41,
+                105,
+                255,
+                6,
+                250,
+                89,
+                112,
+                225,
+                198,
+                8,
+                146,
+                232,
+                110,
+                193,
+                197,
+                35,
+                213,
+                38,
+                108,
+                216
+              ]
+            }
+          }
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fee_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "market"
+              },
+              {
+                "kind": "account",
+                "path": "quote_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "treasury_quote_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "treasury"
+              },
+              {
+                "kind": "account",
+                "path": "quote_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "parent_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  114,
+                  101,
+                  110,
+                  116,
+                  95,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "quote_token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitMarketArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "propose_governance",
+      "discriminator": [
+        129,
+        138,
+        213,
+        117,
+        56,
+        242,
+        208,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_governance",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "queue_action",
+      "discriminator": [
+        5,
+        13,
+        174,
+        118,
+        170,
+        185,
+        22,
+        7
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "queued",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  109,
+                  101,
+                  108,
+                  111,
+                  99,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              },
+              {
+                "kind": "arg",
+                "path": "id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "id",
+          "type": "u64"
+        },
+        {
+          "name": "action",
+          "type": {
+            "defined": {
+              "name": "TimelockAction"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "redeem",
+      "discriminator": [
+        184,
+        12,
+        86,
+        149,
+        70,
+        196,
+        97,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "user",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "writable": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "user_token",
+          "writable": true
+        },
+        {
+          "name": "amm_base_vault",
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                10,
+                5,
+                172,
+                55,
+                36,
+                59,
+                39,
+                107,
+                223,
+                29,
+                192,
+                239,
+                41,
+                105,
+                255,
+                6,
+                250,
+                89,
+                112,
+                225,
+                198,
+                8,
+                146,
+                232,
+                110,
+                193,
+                197,
+                35,
+                213,
+                38,
+                108,
+                216
+              ]
+            }
+          }
+        },
+        {
+          "name": "holder",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "user"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                10,
+                5,
+                172,
+                55,
+                36,
+                59,
+                39,
+                107,
+                223,
+                29,
+                192,
+                239,
+                41,
+                105,
+                255,
+                6,
+                250,
+                89,
+                112,
+                225,
+                198,
+                8,
+                146,
+                232,
+                110,
+                193,
+                197,
+                35,
+                213,
+                38,
+                108,
+                216
+              ]
+            }
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                10,
+                5,
+                172,
+                55,
+                36,
+                59,
+                39,
+                107,
+                223,
+                29,
+                192,
+                239,
+                41,
+                105,
+                255,
+                6,
+                250,
+                89,
+                112,
+                225,
+                198,
+                8,
+                146,
+                232,
+                110,
+                193,
+                197,
+                35,
+                213,
+                38,
+                108,
+                216
+              ]
+            }
+          }
+        },
+        {
+          "name": "hook_program",
+          "address": "g86T56A9yM46y5cyVCVzB1K6MtV5cx89DsFiapy59eP"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "min_lamports_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_agent",
+      "discriminator": [
+        154,
+        74,
+        121,
+        91,
+        137,
+        19,
+        101,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent_authority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  103,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "agent",
+          "type": "pubkey"
+        },
+        {
+          "name": "cooldown_secs",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "set_agent_bound",
+      "discriminator": [
+        22,
+        223,
+        142,
+        210,
+        43,
+        185,
+        13,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent_authority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  103,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "param",
+          "type": {
+            "defined": {
+              "name": "ParamId"
+            }
+          }
+        },
+        {
+          "name": "enabled",
+          "type": "bool"
+        },
+        {
+          "name": "min",
+          "type": "u64"
+        },
+        {
+          "name": "max",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_param",
+      "discriminator": [
+        116,
+        174,
+        75,
+        208,
+        210,
+        13,
+        144,
+        56
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "param",
+          "type": {
+            "defined": {
+              "name": "ParamId"
+            }
+          }
+        },
+        {
+          "name": "value",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_params",
+      "discriminator": [
+        27,
+        234,
+        178,
+        52,
+        147,
+        2,
+        187,
+        141
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "MarketParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_pauses",
+      "discriminator": [
+        48,
+        80,
+        200,
+        227,
+        66,
+        244,
+        226,
+        122
+      ],
+      "accounts": [
+        {
+          "name": "signer",
+          "signer": true
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "pauses",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "set_roles",
+      "discriminator": [
+        119,
+        86,
+        129,
+        161,
+        55,
+        23,
+        250,
+        12
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "signer": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "market",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "market.mint",
+                "account": "Market"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "roles",
+          "type": {
+            "defined": {
+              "name": "Roles"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "snapshot",
+      "discriminator": [
+        144,
+        236,
+        6,
+        133,
+        233,
+        160,
+        21,
+        94
+      ],
+      "accounts": [
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  101,
+                  97,
+                  115,
+                  117,
+                  114,
+                  121
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "amm_base_vault",
+          "relations": [
+            "market"
+          ]
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AgentAuthority",
+      "discriminator": [
+        161,
+        225,
+        83,
+        39,
+        179,
+        98,
+        31,
+        118
+      ]
+    },
+    {
+      "name": "Market",
+      "discriminator": [
+        219,
+        190,
+        213,
+        55,
+        0,
+        227,
+        198,
+        154
+      ]
+    },
+    {
+      "name": "QueuedAction",
+      "discriminator": [
+        117,
+        70,
+        183,
+        69,
+        156,
+        140,
+        186,
+        32
+      ]
+    },
+    {
+      "name": "Treasury",
+      "discriminator": [
+        238,
+        239,
+        123,
+        238,
+        89,
+        1,
+        168,
+        253
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "ActionCancelled",
+      "discriminator": [
+        121,
+        213,
+        205,
+        29,
+        226,
+        181,
+        230,
+        13
+      ]
+    },
+    {
+      "name": "ActionExecuted",
+      "discriminator": [
+        116,
+        101,
+        146,
+        36,
+        160,
+        153,
+        182,
+        233
+      ]
+    },
+    {
+      "name": "ActionQueued",
+      "discriminator": [
+        77,
+        189,
+        39,
+        169,
+        248,
+        125,
+        126,
+        168
+      ]
+    },
+    {
+      "name": "ExternalRewardsDeposited",
+      "discriminator": [
+        102,
+        228,
+        241,
+        181,
+        189,
+        43,
+        5,
+        221
+      ]
+    },
+    {
+      "name": "FeeSwap",
+      "discriminator": [
+        100,
+        90,
+        187,
+        222,
+        49,
+        187,
+        47,
+        144
+      ]
+    },
+    {
+      "name": "FeesDistributed",
+      "discriminator": [
+        209,
+        24,
+        174,
+        200,
+        236,
+        90,
+        154,
+        55
+      ]
+    },
+    {
+      "name": "MarketInitialized",
+      "discriminator": [
+        134,
+        160,
+        122,
+        87,
+        50,
+        3,
+        255,
+        81
+      ]
+    },
+    {
+      "name": "ParamUpdated",
+      "discriminator": [
+        68,
+        86,
+        14,
+        131,
+        209,
+        66,
+        199,
+        122
+      ]
+    },
+    {
+      "name": "ParamsUpdated",
+      "discriminator": [
+        2,
+        163,
+        138,
+        99,
+        135,
+        11,
+        136,
+        169
+      ]
+    },
+    {
+      "name": "PausesUpdated",
+      "discriminator": [
+        204,
+        44,
+        226,
+        48,
+        154,
+        15,
+        61,
+        115
+      ]
+    },
+    {
+      "name": "Redeemed",
+      "discriminator": [
+        14,
+        29,
+        183,
+        71,
+        31,
+        165,
+        107,
+        38
+      ]
+    },
+    {
+      "name": "TreasurySnapshot",
+      "discriminator": [
+        29,
+        80,
+        144,
+        61,
+        142,
+        177,
+        224,
+        158
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidParameter",
+      "msg": "Invalid parameter value"
+    },
+    {
+      "code": 6001,
+      "name": "Unauthorized",
+      "msg": "Caller is not authorised"
+    },
+    {
+      "code": 6002,
+      "name": "UnsafeMint",
+      "msg": "Mint does not satisfy the BACKSTOP engine safety requirements"
+    },
+    {
+      "code": 6003,
+      "name": "MintAuthorityNotRevoked",
+      "msg": "Mint authority must be revoked (fixed supply) before the market goes live"
+    },
+    {
+      "code": 6004,
+      "name": "FreezeAuthorityPresent",
+      "msg": "Mint must not have a freeze authority"
+    },
+    {
+      "code": 6005,
+      "name": "ForbiddenExtension",
+      "msg": "Mint uses a forbidden Token-2022 extension"
+    },
+    {
+      "code": 6006,
+      "name": "BadTransferHook",
+      "msg": "Transfer hook must point at the BACKSTOP hook with no hook authority"
+    },
+    {
+      "code": 6007,
+      "name": "BadDecimals",
+      "msg": "Decimals must be 9"
+    },
+    {
+      "code": 6008,
+      "name": "AccountMismatch",
+      "msg": "Account does not match the market configuration"
+    },
+    {
+      "code": 6009,
+      "name": "RedemptionPaused",
+      "msg": "Redemption is paused (timelocked emergency action)"
+    },
+    {
+      "code": 6010,
+      "name": "NothingToRedeem",
+      "msg": "Nothing to redeem / circulating supply is zero"
+    },
+    {
+      "code": 6011,
+      "name": "RedemptionSlippage",
+      "msg": "Redemption output below the requested minimum"
+    },
+    {
+      "code": 6012,
+      "name": "SwapSlippage",
+      "msg": "Swap output below the oracle-bounded minimum"
+    },
+    {
+      "code": 6013,
+      "name": "SwapTooLarge",
+      "msg": "Swap amount exceeds the per-chunk maximum"
+    },
+    {
+      "code": 6014,
+      "name": "BadSwapProgram",
+      "msg": "Swap program is not the configured one"
+    },
+    {
+      "code": 6015,
+      "name": "OracleUnavailable",
+      "msg": "Oracle price is stale or invalid"
+    },
+    {
+      "code": 6016,
+      "name": "OutOfBounds",
+      "msg": "Agent update outside governance bounds"
+    },
+    {
+      "code": 6017,
+      "name": "NotAgentTunable",
+      "msg": "Parameter is not agent-tunable"
+    },
+    {
+      "code": 6018,
+      "name": "Cooldown",
+      "msg": "Agent cooldown has not elapsed"
+    },
+    {
+      "code": 6019,
+      "name": "TimelockNotExpired",
+      "msg": "Timelock has not expired"
+    },
+    {
+      "code": 6020,
+      "name": "GuardianCannotUnpause",
+      "msg": "Guardian may only set pause flags"
+    },
+    {
+      "code": 6021,
+      "name": "InsufficientTreasury",
+      "msg": "Treasury balance insufficient"
+    },
+    {
+      "code": 6022,
+      "name": "MathOverflow",
+      "msg": "Arithmetic error"
+    }
+  ],
+  "types": [
+    {
+      "name": "ActionCancelled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ActionExecuted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "action",
+            "type": {
+              "defined": {
+                "name": "TimelockAction"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ActionQueued",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "action",
+            "type": {
+              "defined": {
+                "name": "TimelockAction"
+              }
+            }
+          },
+          {
+            "name": "eta",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AgentAuthority",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "agent",
+            "docs": [
+              "Hot key of the AI treasury agent service."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "cooldown_secs",
+            "type": "i64"
+          },
+          {
+            "name": "bounds",
+            "docs": [
+              "Indexed by `ParamId as usize`."
+            ],
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "ParamBound"
+                  }
+                },
+                28
+              ]
+            }
+          },
+          {
+            "name": "updates",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ExternalRewardsDeposited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "from",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeStats",
+      "docs": [
+        "Lifetime fee accounting (invariant: collected == Σ components)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "distributed",
+            "type": "u64"
+          },
+          {
+            "name": "to_chests",
+            "type": "u64"
+          },
+          {
+            "name": "to_shield",
+            "type": "u64"
+          },
+          {
+            "name": "to_treasury",
+            "type": "u64"
+          },
+          {
+            "name": "to_parent",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeSwap",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "kind",
+            "docs": [
+              "0 = treasury USDC→SOL, 1 = parent share → parent rewards, 2 = shield SOL → USDC"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "amount_in",
+            "type": "u64"
+          },
+          {
+            "name": "amount_out",
+            "type": "u64"
+          },
+          {
+            "name": "oracle_min_out",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeesDistributed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "to_chests",
+            "type": "u64"
+          },
+          {
+            "name": "to_shield",
+            "type": "u64"
+          },
+          {
+            "name": "to_treasury",
+            "type": "u64"
+          },
+          {
+            "name": "to_parent",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookConfig",
+      "docs": [
+        "Market-level hook configuration (Borsh account, rarely written)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "reward_bump",
+            "type": "u8"
+          },
+          {
+            "name": "reward_ready",
+            "docs": [
+              "RewardState has reached its full size and is initialised."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "governance",
+            "docs": [
+              "Governance (Squads multisig vault on mainnet)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_governance",
+            "docs": [
+              "Two-step governance transfer target (default = none)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "core_authority",
+            "docs": [
+              "`backstop-core` market PDA: may deposit rewards and record burns."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "offers_authority",
+            "docs": [
+              "`backstop-offers` book PDA: may credit absorb tenure."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "chest_authority",
+            "docs": [
+              "`backstop-chest` chest-market PDA: may harvest rewards into chests."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_authority",
+            "docs": [
+              "`backstop-amm` pool PDA: transfers into it from wallets are direct sells."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "allowed_programs",
+            "docs": [
+              "Programs that may be the top-level instruction of a token movement."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "allowed_owners",
+            "docs": [
+              "Off-curve token-account owners permitted to receive tokens."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "tenure_cap_secs",
+            "docs": [
+              "Average age at which the tenure multiplier caps (default 90 d)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "tenure_extra_bps",
+            "docs": [
+              "Multiplier above 1.0 at the cap, bps (default 20_000 → 3.0×)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "absorb_tenure_bps",
+            "docs": [
+              "Share of a seller's lot tenure transferred to absorbers (default 40 %)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "direct_sell_cap",
+            "docs": [
+              "Rolling per-wallet cap on direct AMM sells (default = min offer size)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "direct_sell_window_secs",
+            "type": "u64"
+          },
+          {
+            "name": "link_min_amount",
+            "docs": [
+              "Minimum direct transfer recorded in the recent-sender ring."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "link_window_secs",
+            "type": "u64"
+          },
+          {
+            "name": "epoch_secs",
+            "docs": [
+              "Distribution epoch length — immutable after initialisation."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "genesis_ts",
+            "docs": [
+              "Boundary 0 timestamp — immutable after initialisation."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "holders",
+            "type": "u64"
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitMarketArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "governance",
+            "type": "pubkey"
+          },
+          {
+            "name": "guardian",
+            "type": "pubkey"
+          },
+          {
+            "name": "keeper",
+            "type": "pubkey"
+          },
+          {
+            "name": "swap_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle",
+            "type": {
+              "defined": {
+                "name": "OracleConfig"
+              }
+            }
+          },
+          {
+            "name": "params",
+            "docs": [
+              "`None` → spec defaults."
+            ],
+            "type": {
+              "option": {
+                "defined": {
+                  "name": "MarketParams"
+                }
+              }
+            }
+          },
+          {
+            "name": "parent",
+            "docs": [
+              "Parent market mint (launchpad children); default for root markets."
+            ],
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Market",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "treasury_bump",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_token_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_decimals",
+            "type": "u8"
+          },
+          {
+            "name": "parent",
+            "docs": [
+              "Parent market for launchpad children (default for BACKSTOP itself)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "governance",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_governance",
+            "type": "pubkey"
+          },
+          {
+            "name": "guardian",
+            "docs": [
+              "May only *set* pause flags (immediate emergency stop)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "keeper",
+            "docs": [
+              "Executes fee swaps (bounded by the oracle and slippage cap)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "swap_program",
+            "docs": [
+              "Swap program allowed for fee conversion (Jupiter v6 on mainnet)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pauses",
+            "type": "u8"
+          },
+          {
+            "name": "redemption_paused",
+            "docs": [
+              "Redemption can only be paused through the 48 h timelock."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "params",
+            "type": {
+              "defined": {
+                "name": "MarketParams"
+              }
+            }
+          },
+          {
+            "name": "oracle",
+            "type": {
+              "defined": {
+                "name": "OracleConfig"
+              }
+            }
+          },
+          {
+            "name": "fee_vault",
+            "docs": [
+              "Quote ATA of this market PDA receiving all trade fees."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_quote_vault",
+            "docs": [
+              "Quote ATA of the treasury PDA (treasury share awaiting conversion)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "holder_rewards_vault",
+            "docs": [
+              "Chest program vault receiving holder rewards."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "shield_rewards_vault",
+            "docs": [
+              "Chest program vault receiving Shield rewards."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "parent_vault",
+            "docs": [
+              "Quote ATA of this market PDA holding the parent's share (children)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_base_vault",
+            "docs": [
+              "AMM base vault (protocol-held supply excluded from circulation)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fees",
+            "type": {
+              "defined": {
+                "name": "FeeStats"
+              }
+            }
+          },
+          {
+            "name": "treasury_sol_in",
+            "docs": [
+              "Lamports received from fee conversion."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "redeemed_tokens",
+            "type": "u64"
+          },
+          {
+            "name": "redeemed_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "shield_lamports_pending",
+            "docs": [
+              "Redemption fees (lamports) awaiting conversion to Shield rewards."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarketInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "parent",
+            "type": "pubkey"
+          },
+          {
+            "name": "governance",
+            "type": "pubkey"
+          },
+          {
+            "name": "supply",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarketParams",
+      "docs": [
+        "Every governable parameter of a market (spec §3). Defaults in",
+        "[`MarketParams::defaults`]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "trade_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "split_chest_bps",
+            "type": "u16"
+          },
+          {
+            "name": "split_shield_bps",
+            "type": "u16"
+          },
+          {
+            "name": "parent_share_bps",
+            "docs": [
+              "Share of gross fees routed to the parent market (children only)."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "base_discount_bps",
+            "type": "u16"
+          },
+          {
+            "name": "k_up_bps",
+            "type": "u16"
+          },
+          {
+            "name": "k_down_bps",
+            "type": "u16"
+          },
+          {
+            "name": "min_discount_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_discount_bps",
+            "type": "u16"
+          },
+          {
+            "name": "offer_window_secs",
+            "type": "u32"
+          },
+          {
+            "name": "bid_epoch_secs",
+            "type": "u32"
+          },
+          {
+            "name": "min_offer_size",
+            "type": "u64"
+          },
+          {
+            "name": "lots_per_offer",
+            "type": "u16"
+          },
+          {
+            "name": "ticket_validity_secs",
+            "type": "u32"
+          },
+          {
+            "name": "chest_lock_secs",
+            "type": "u32"
+          },
+          {
+            "name": "chest_penalty_bps",
+            "type": "u16"
+          },
+          {
+            "name": "redemption_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "yield_buffer_bps",
+            "type": "u16"
+          },
+          {
+            "name": "shield_per_offer_cap",
+            "type": "u64"
+          },
+          {
+            "name": "shield_max_share_bps",
+            "type": "u16"
+          },
+          {
+            "name": "shield_min_lock_secs",
+            "type": "u32"
+          },
+          {
+            "name": "shield_max_multiplier_bps",
+            "type": "u32"
+          },
+          {
+            "name": "shield_max_premium_bps",
+            "docs": [
+              "Shield skips offers whose short TWAP exceeds the hourly TWAP by more",
+              "than this (pump-and-dump protection)."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "price_twap_window_secs",
+            "type": "u32"
+          },
+          {
+            "name": "momentum_lookback_secs",
+            "type": "u32"
+          },
+          {
+            "name": "direct_sell_hourly_cap",
+            "docs": [
+              "Global cap on direct (sub-minimum) AMM sells per hour, base units."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_swap_slippage_bps",
+            "docs": [
+              "Max slippage vs. oracle on keeper fee swaps (spec: 0.5 %)."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "max_swap_chunk",
+            "docs": [
+              "Max single keeper swap; larger amounts are TWAP-chunked by the keeper."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleConfig",
+      "docs": [
+        "Price source used to bound keeper swaps."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "kind",
+            "docs": [
+              "0 = governance-set manual price (localnet/devnet), 1 = Pyth PriceUpdateV2."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "feed",
+            "docs": [
+              "Pyth price-update account (kind = 1)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "manual_quote_per_sol",
+            "docs": [
+              "Manual price: quote base units per 1 SOL (1e9 lamports)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_staleness_secs",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ParamBound",
+      "docs": [
+        "Bounds for one agent-tunable parameter."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "min",
+            "type": "u64"
+          },
+          {
+            "name": "max",
+            "type": "u64"
+          },
+          {
+            "name": "last_update",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ParamId",
+      "docs": [
+        "Identifier of a single governable parameter."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "TradeFeeBps"
+          },
+          {
+            "name": "SplitChestBps"
+          },
+          {
+            "name": "SplitShieldBps"
+          },
+          {
+            "name": "ParentShareBps"
+          },
+          {
+            "name": "BaseDiscountBps"
+          },
+          {
+            "name": "KUpBps"
+          },
+          {
+            "name": "KDownBps"
+          },
+          {
+            "name": "MinDiscountBps"
+          },
+          {
+            "name": "MaxDiscountBps"
+          },
+          {
+            "name": "OfferWindowSecs"
+          },
+          {
+            "name": "BidEpochSecs"
+          },
+          {
+            "name": "MinOfferSize"
+          },
+          {
+            "name": "LotsPerOffer"
+          },
+          {
+            "name": "TicketValiditySecs"
+          },
+          {
+            "name": "ChestLockSecs"
+          },
+          {
+            "name": "ChestPenaltyBps"
+          },
+          {
+            "name": "RedemptionFeeBps"
+          },
+          {
+            "name": "YieldBufferBps"
+          },
+          {
+            "name": "ShieldPerOfferCap"
+          },
+          {
+            "name": "ShieldMaxShareBps"
+          },
+          {
+            "name": "ShieldMinLockSecs"
+          },
+          {
+            "name": "ShieldMaxMultiplierBps"
+          },
+          {
+            "name": "ShieldMaxPremiumBps"
+          },
+          {
+            "name": "PriceTwapWindowSecs"
+          },
+          {
+            "name": "MomentumLookbackSecs"
+          },
+          {
+            "name": "DirectSellHourlyCap"
+          },
+          {
+            "name": "MaxSwapSlippageBps"
+          },
+          {
+            "name": "MaxSwapChunk"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ParamUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "param",
+            "type": {
+              "defined": {
+                "name": "ParamId"
+              }
+            }
+          },
+          {
+            "name": "old_value",
+            "type": "u64"
+          },
+          {
+            "name": "new_value",
+            "type": "u64"
+          },
+          {
+            "name": "by",
+            "type": "pubkey"
+          },
+          {
+            "name": "agent",
+            "docs": [
+              "true when applied through the agent's bounded authority"
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ParamsUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "params",
+            "type": {
+              "defined": {
+                "name": "MarketParams"
+              }
+            }
+          },
+          {
+            "name": "by",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PausesUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pauses",
+            "type": "u8"
+          },
+          {
+            "name": "by",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "QueuedAction",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "action",
+            "type": {
+              "defined": {
+                "name": "TimelockAction"
+              }
+            }
+          },
+          {
+            "name": "eta",
+            "type": "i64"
+          },
+          {
+            "name": "queued_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Redeemed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokens",
+            "type": "u64"
+          },
+          {
+            "name": "gross_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "fee_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "net_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "treasury_lamports_after",
+            "type": "u64"
+          },
+          {
+            "name": "circulating_before",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Roles",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "guardian",
+            "type": "pubkey"
+          },
+          {
+            "name": "keeper",
+            "type": "pubkey"
+          },
+          {
+            "name": "swap_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "oracle",
+            "type": {
+              "defined": {
+                "name": "OracleConfig"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "TimelockAction",
+      "docs": [
+        "Actions that require the 48 h on-chain timelock."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "TreasuryWithdraw",
+            "fields": [
+              {
+                "name": "to",
+                "type": "pubkey"
+              },
+              {
+                "name": "lamports",
+                "type": "u64"
+              }
+            ]
+          },
+          {
+            "name": "SetRedemptionPaused",
+            "fields": [
+              {
+                "name": "paused",
+                "type": "bool"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Treasury",
+      "docs": [
+        "SOL treasury PDA. Treasury SOL = lamports − rent − pending Shield fees."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "market",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreasurySnapshot",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "circulating",
+            "type": "u64"
+          },
+          {
+            "name": "floor_price",
+            "docs": [
+              "lamports per token base unit × 1e18"
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

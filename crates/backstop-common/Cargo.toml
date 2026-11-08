@@ -11,3 +11,6 @@ name = "backstop_common"
 
 [dependencies]
 anchor-lang = { workspace = true }
+
+[dev-dependencies]
+backstop-math = { workspace = true }

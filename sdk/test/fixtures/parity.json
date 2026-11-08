@@ -1,0 +1,57 @@
+{
+  "mint": "BSTPmint11111111111111111111111111111111111",
+  "wallet": "Wa11et1111111111111111111111111111111111111",
+  "pdas": {
+    "hookConfig": "5DZ7P8YLyweTYmbea7DtjUe1PGnLFKHpztApMCvst6xM",
+    "extraAccountMetas": "8jgC94SQhdKmvBrV8LXT5DCo8ZfgjYPEoCivhj6qYmRk",
+    "holder": "13zCWKemdogBWT2wL4RnfokqX4zpkEhvSaYf4ibxdWGw",
+    "rewardState": "GUY5oV11KcErgojtym7FwksxAgAA8JTcqpHRVTCSxRdc",
+    "market": "6bDBnh1Q4BDXPpGQn1kFfi3AnRx7Pp2vQVcDuJPE3DrW",
+    "treasury": "uQv84UwyyYuYLYMiHeHU2nvuT2LtH1YD2BDvkvwQK2P",
+    "agent": "9fHwLoPhk6dWXNuVLZs4cCTpGq231kapD2b9F7Q6dxAC",
+    "timelock": "2PX9sE4bR7B76o7gAK1yXqptvhkB1rTVsGoeyhD9nXu8",
+    "parentVault": "9DKQh8XT1BTM1oGWJRREr7eSVZYyC7kaxaSusC26dvWk",
+    "pool": "3cFH64P1BoPbkUNkYeiqDSj4hQkReUvnhY4KzZnZshba",
+    "book": "A5dHUtjQjgtWBgakRmUwgE5NjEbQNn3Pit3CfTp5sj6b",
+    "offer": "sKRyRzSpLTFerwd7vQkBMmb2RoxCQ3htE6fpJz14MgN",
+    "bid": "Ej25Urjno9f4JzhwPq1n51dd3WuEzVo9RUQCaBeGpEZ",
+    "ticket": "ET4MHcj5Bs9VapDQZ9iKRJVWJGNr2di4cxLXGnf5hsbb",
+    "chestMarket": "AEE9ikPY5UAH56aWqbgQa6cMuPzYRn4yTkRQoJrimwzY",
+    "chest": "ETYTuGJdAashfXojrCBArMpDLdz3WiyE4zvxw2ciSRAS",
+    "grant": "6ivAjX9T1zNcXKtKzshm4iDcHc1tVLBw4PVY8E91nb69",
+    "shield": "FrycnM6RJ76EkhmE67TDVQ3P22cgU3MPXMiQQTWF9xxp",
+    "shieldPosition": "5TQL2vnTmDJK9hxa1G1WLCpqpMusrB7mv5AWM261FfxN",
+    "rewardsVaultAuthority": "F7GmQM27fn673oRTDUMNJ3BVPgE7b98urFFZMxHDorbY",
+    "shieldRewardsVault": "FX4WamxHj5VmzyEyHa1eA6kdYDbd6GcMWRWmHX2g4fxy",
+    "launchpad": "628dVhBxMFkUmZeswGJx3QoBTPEZDiuYWELMwfiE9Zu6",
+    "child": "SggV7sr3PkHS9Lh6jtPtPnUHZrErEAxwGootZ3ybABt",
+    "vesting": "6wHUrTNSgwogxyK2bmSGuutL35jG7fP4NsQwv3R6J8Af",
+    "childMintAuthority": "9RAdiTfDkZV6wmV31zhndUXd3NTroT8gFbHNAJGT4hAb"
+  },
+  "allocate": [
+    [0, 30, 120, 100, 0, 25],
+    [30, 50, 120, 100, 77, 42],
+    [80, 40, 120, 100, 119, 34],
+    [0, 3, 3, 10, 0, 3],
+    [2, 1, 9, 4, 5, 0]
+  ],
+  "discount": [
+    [-50000, 200],
+    [-2000, 200],
+    [-1000, 350],
+    [0, 500],
+    [999, 749],
+    [2000, 1000],
+    [4000, 1200],
+    [100000, 1200]
+  ],
+  "buy": [
+    ["1000", "1000000", "1000000", "30", "969"],
+    ["123456789", "999999999999", "50000000000", "3703704", "2389339085"]
+  ],
+  "multiplier": [
+    ["1000", "0", 10000],
+    ["1000", "3888000000", 20000],
+    ["7", "120960000", 30000]
+  ]
+}

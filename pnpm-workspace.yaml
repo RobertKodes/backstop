@@ -1,0 +1,10 @@
+packages:
+  - sdk
+  - indexer
+  - keeper
+  - api
+  - agent
+  - web
+  - tests/e2e
+  - tests/load
+  - scripts/ts

@@ -1,0 +1,8 @@
+target
+**/dist
+**/.next
+**/node_modules
+**/src/idl
+pnpm-lock.yaml
+Cargo.lock
+*.md

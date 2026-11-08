@@ -1,0 +1,64 @@
+# Local development stack.
+#   docker compose up -d postgres redis            # infra only
+#   docker compose --profile app up -d --build     # + indexer, api, keeper, agent
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: backstop
+      POSTGRES_PASSWORD: backstop
+      POSTGRES_DB: backstop
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U backstop"]
+      interval: 2s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+
+  indexer:
+    profiles: [app]
+    build: { context: ., args: { SERVICE: indexer } }
+    env_file: [indexer/.env.example]
+    environment:
+      DATABASE_URL: postgres://backstop:backstop@postgres:5432/backstop
+      REDIS_URL: redis://redis:6379
+    ports: ["8788:8788"]
+    depends_on: { postgres: { condition: service_healthy }, redis: { condition: service_healthy } }
+
+  api:
+    profiles: [app]
+    build: { context: ., args: { SERVICE: api } }
+    env_file: [api/.env.example]
+    environment:
+      DATABASE_URL: postgres://backstop:backstop@postgres:5432/backstop
+      REDIS_URL: redis://redis:6379
+    ports: ["8787:8787"]
+    depends_on: [indexer]
+
+  keeper:
+    profiles: [app]
+    build: { context: ., args: { SERVICE: keeper } }
+    env_file: [keeper/.env.example]
+    environment:
+      DATABASE_URL: postgres://backstop:backstop@postgres:5432/backstop
+    ports: ["8790:8790"]
+    depends_on: [indexer]
+
+  agent:
+    profiles: [app]
+    build: { context: ., args: { SERVICE: agent } }
+    env_file: [agent/.env.example]
+    environment:
+      DATABASE_URL: postgres://backstop:backstop@postgres:5432/backstop
+    depends_on: [indexer]
+
+volumes:
+  pgdata: {}

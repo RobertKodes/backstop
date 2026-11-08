@@ -1,0 +1,40 @@
+{
+  "name": "backstop",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20.18"
+  },
+  "scripts": {
+    "build": "pnpm build:programs && pnpm -r --filter=!./web build && pnpm --filter ./web build",
+    "build:programs": "bash scripts/build-programs.sh && bash scripts/sync-idl.sh",
+    "build:ts": "pnpm -r build",
+    "test": "pnpm test:programs && pnpm test:ts",
+    "test:programs": "cargo test --workspace",
+    "test:ts": "pnpm -r test",
+    "test:e2e": "pnpm --filter ./tests/e2e test",
+    "test:load": "pnpm --filter ./tests/load test",
+    "lint": "pnpm -r lint && cargo clippy --workspace --all-targets -- -D warnings",
+    "typecheck": "pnpm -r typecheck",
+    "fmt": "prettier --write . && cargo fmt --all",
+    "fmt:check": "prettier --check . && cargo fmt --all -- --check",
+    "deploy:devnet": "bash scripts/deploy.sh devnet",
+    "deploy:mainnet": "bash scripts/deploy.sh mainnet-beta",
+    "genesis:devnet": "pnpm --filter ./scripts/ts genesis --cluster devnet",
+    "seed:devnet": "pnpm --filter ./scripts/ts seed --cluster devnet",
+    "indexer:replay": "pnpm --filter ./indexer replay",
+    "indexer:run": "pnpm --filter ./indexer start",
+    "keeper:run": "pnpm --filter ./keeper start",
+    "api:run": "pnpm --filter ./api start",
+    "agent:run": "pnpm --filter ./agent start",
+    "web:dev": "pnpm --filter ./web dev",
+    "copy:lint": "node scripts/lint-copy.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint": "^9.39.0",
+    "prettier": "^3.6.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.72.1"
+  }
+}

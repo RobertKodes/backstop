@@ -1,0 +1,32 @@
+{
+  "name": "@backstop/keeper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src test",
+    "test": "vitest run",
+    "start": "node dist/main.js"
+  },
+  "dependencies": {
+    "@backstop/sdk": "workspace:*",
+    "@solana/spl-token": "0.4.15",
+    "@solana/web3.js": "1.99.0",
+    "bn.js": "^5.2.3",
+    "bs58": "^6.0.0",
+    "fastify": "^5.6.1",
+    "pg": "^8.16.3",
+    "pino": "^9.13.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.2.0",
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.15.5",
+    "typescript": "5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

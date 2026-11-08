@@ -72,10 +72,25 @@ jobs:
           path: target/idl/
 
   typescript:
-    name: TypeScript — lint, typecheck, test
+    name: TypeScript — lint, typecheck, unit + integration tests
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    if: hashFiles('pnpm-workspace.yaml') != ''
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: backstop
+          POSTGRES_PASSWORD: backstop
+          POSTGRES_DB: backstop
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U backstop" --health-interval 2s --health-retries 30
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      DATABASE_URL: postgres://backstop:backstop@localhost:5432/backstop
+      REDIS_URL: redis://localhost:6379
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -86,6 +101,12 @@ jobs:
           node-version: 20
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Build (topological — SDK first)
+        run: pnpm -r --filter=!./web build
       - run: pnpm -r lint
       - run: pnpm -r typecheck
-      - run: pnpm -r test
+      - name: Unit + integration tests (indexer/API run against Postgres)
+        # integration suites drop/recreate the schema → run packages serially
+        run: pnpm -r --workspace-concurrency=1 test
+      - name: Copy guidelines lint
+        run: pnpm copy:lint

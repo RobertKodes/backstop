@@ -1,0 +1,35 @@
+{
+  "name": "@backstop/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript client for the BACKSTOP programs: IDLs, PDAs, instruction builders, decoders and event parsing.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-idl.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src test",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@anchor-lang/core": "1.2.2",
+    "@solana/spl-token": "0.4.15",
+    "@solana/web3.js": "1.99.0",
+    "bn.js": "^5.2.3"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.2.0",
+    "@types/node": "^22.15.0",
+    "eslint": "^9.39.0",
+    "typescript": "5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

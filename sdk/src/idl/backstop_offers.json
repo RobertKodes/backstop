@@ -1,0 +1,3716 @@
+{
+  "address": "DW1bgui9AwKGmBxRryjGn6CtKYfo2aXuyeHXLxzewGj",
+  "metadata": {
+    "name": "backstop_offers",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "BACKSTOP offer book: escrowed sell offers, randomised pro-rata settlement, Shield priority, AMM remainder routing and Return Tickets."
+  },
+  "instructions": [
+    {
+      "name": "buy_with_ticket",
+      "discriminator": [
+        117,
+        66,
+        237,
+        106,
+        225,
+        192,
+        144,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "ticket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "ticket.mint",
+                "account": "Ticket"
+              },
+              {
+                "kind": "account",
+                "path": "buyer"
+              },
+              {
+                "kind": "account",
+                "path": "ticket.offer_id",
+                "account": "Ticket"
+              }
+            ]
+          }
+        },
+        {
+          "name": "book",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "ticket.mint",
+                "account": "Ticket"
+              }
+            ]
+          }
+        },
+        {
+          "name": "market"
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "fee_vault",
+          "writable": true
+        },
+        {
+          "name": "buyer_quote",
+          "writable": true
+        },
+        {
+          "name": "buyer_base",
+          "writable": true
+        },
+        {
+          "name": "amm_program",
+          "address": "8m9GWYsGaqmGECJnN6kipQXiaJfk8t2MhS8U5LugUw8b"
+        },
+        {
+          "name": "base_token_program"
+        },
+        {
+          "name": "quote_token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "quote_in",
+          "type": "u64"
+        },
+        {
+          "name": "min_base_out",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "claim",
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "claimer",
+          "signer": true
+        },
+        {
+          "name": "refund_authority",
+          "docs": [
+            "Required for chest-funded bids: the chest-market PDA (so the chest",
+            "program can credit the refund to the bidder's chest atomically)."
+          ],
+          "signer": true,
+          "optional": true
+        },
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "offer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "offer.id",
+                "account": "Offer"
+              }
+            ]
+          },
+          "relations": [
+            "bid"
+          ]
+        },
+        {
+          "name": "bid",
+          "writable": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "book",
+            "offer"
+          ]
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "bidder_token",
+          "writable": true
+        },
+        {
+          "name": "refund_to",
+          "writable": true
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "relations": [
+            "book"
+          ]
+        },
+        {
+          "name": "bid_vault",
+          "writable": true,
+          "relations": [
+            "offer"
+          ]
+        },
+        {
+          "name": "hook_config"
+        },
+        {
+          "name": "bidder_holder",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "bid.bidder",
+                "account": "Bid"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                10,
+                5,
+                172,
+                55,
+                36,
+                59,
+                39,
+                107,
+                223,
+                29,
+                192,
+                239,
+                41,
+                105,
+                255,
+                6,
+                250,
+                89,
+                112,
+                225,
+                198,
+                8,
+                146,
+                232,
+                110,
+                193,
+                197,
+                35,
+                213,
+                38,
+                108,
+                216
+              ]
+            }
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true
+        },
+        {
+          "name": "hook_program",
+          "address": "g86T56A9yM46y5cyVCVzB1K6MtV5cx89DsFiapy59eP"
+        },
+        {
+          "name": "base_token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "quote_token_program"
+        }
+      ],
+      "args": [],
+      "returns": "u64"
+    },
+    {
+      "name": "close_bidding",
+      "discriminator": [
+        219,
+        203,
+        190,
+        31,
+        25,
+        53,
+        75,
+        228
+      ],
+      "accounts": [
+        {
+          "name": "offer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "offer.mint",
+                "account": "Offer"
+              },
+              {
+                "kind": "account",
+                "path": "offer.id",
+                "account": "Offer"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_offer",
+      "discriminator": [
+        191,
+        72,
+        67,
+        35,
+        239,
+        209,
+        97,
+        132
+      ],
+      "accounts": [
+        {
+          "name": "seller",
+          "writable": true
+        },
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "offer.mint",
+                "account": "Offer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "offer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "offer.mint",
+                "account": "Offer"
+              },
+              {
+                "kind": "account",
+                "path": "offer.id",
+                "account": "Offer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bid_vault",
+          "writable": true,
+          "relations": [
+            "offer"
+          ]
+        },
+        {
+          "name": "quote_token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_ticket",
+      "discriminator": [
+        66,
+        209,
+        114,
+        197,
+        75,
+        27,
+        182,
+        117
+      ],
+      "accounts": [
+        {
+          "name": "seller",
+          "writable": true
+        },
+        {
+          "name": "ticket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "ticket.mint",
+                "account": "Ticket"
+              },
+              {
+                "kind": "account",
+                "path": "ticket.seller",
+                "account": "Ticket"
+              },
+              {
+                "kind": "account",
+                "path": "ticket.offer_id",
+                "account": "Ticket"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_offer",
+      "discriminator": [
+        237,
+        233,
+        192,
+        168,
+        248,
+        7,
+        249,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "seller",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                146,
+                194,
+                197,
+                175,
+                129,
+                72,
+                192,
+                202,
+                160,
+                255,
+                104,
+                41,
+                156,
+                110,
+                33,
+                20,
+                233,
+                213,
+                21,
+                55,
+                155,
+                172,
+                76,
+                53,
+                47,
+                36,
+                86,
+                111,
+                206,
+                239,
+                29,
+                156
+              ]
+            }
+          }
+        },
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                115,
+                80,
+                182,
+                74,
+                23,
+                207,
+                179,
+                35,
+                103,
+                27,
+                18,
+                156,
+                129,
+                6,
+                236,
+                24,
+                72,
+                245,
+                207,
+                64,
+                252,
+                76,
+                236,
+                131,
+                47,
+                22,
+                97,
+                188,
+                104,
+                93,
+                161,
+                56
+              ]
+            }
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "market",
+            "book"
+          ]
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "offer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "book.next_offer_id",
+                "account": "OfferBook"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bid_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "offer"
+              },
+              {
+                "kind": "account",
+                "path": "quote_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "quote_mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "seller_token",
+          "writable": true
+        },
+        {
+          "name": "seller_quote"
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "relations": [
+            "book"
+          ]
+        },
+        {
+          "name": "seller_holder",
+          "docs": [
+            "Seller's holder (tenure carried by the offer + self-fill ring)."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "seller"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                10,
+                5,
+                172,
+                55,
+                36,
+                59,
+                39,
+                107,
+                223,
+                29,
+                192,
+                239,
+                41,
+                105,
+                255,
+                6,
+                250,
+                89,
+                112,
+                225,
+                198,
+                8,
+                146,
+                232,
+                110,
+                193,
+                197,
+                35,
+                213,
+                38,
+                108,
+                216
+              ]
+            }
+          }
+        },
+        {
+          "name": "base_token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "quote_token_program"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "message",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "init_book",
+      "discriminator": [
+        96,
+        122,
+        49,
+        43,
+        63,
+        61,
+        118,
+        152
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "authority",
+          "docs": [
+            "Market governance (root markets) or the launchpad PDA (children)."
+          ],
+          "signer": true
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                146,
+                194,
+                197,
+                175,
+                129,
+                72,
+                192,
+                202,
+                160,
+                255,
+                104,
+                41,
+                156,
+                110,
+                33,
+                20,
+                233,
+                213,
+                21,
+                55,
+                155,
+                172,
+                76,
+                53,
+                47,
+                36,
+                86,
+                111,
+                206,
+                239,
+                29,
+                156
+              ]
+            }
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "quote_mint",
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "book"
+              },
+              {
+                "kind": "account",
+                "path": "base_token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "base_token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "place_bid",
+      "discriminator": [
+        238,
+        77,
+        148,
+        91,
+        200,
+        151,
+        92,
+        146
+      ],
+      "accounts": [
+        {
+          "name": "rent_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "funder",
+          "docs": [
+            "The bidder (wallet bids) or the chest-market PDA (chest/auto bids)."
+          ],
+          "signer": true
+        },
+        {
+          "name": "bidder"
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                146,
+                194,
+                197,
+                175,
+                129,
+                72,
+                192,
+                202,
+                160,
+                255,
+                104,
+                41,
+                156,
+                110,
+                33,
+                20,
+                233,
+                213,
+                21,
+                55,
+                155,
+                172,
+                76,
+                53,
+                47,
+                36,
+                86,
+                111,
+                206,
+                239,
+                29,
+                156
+              ]
+            }
+          }
+        },
+        {
+          "name": "offer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "offer.id",
+                "account": "Offer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "market",
+            "offer"
+          ]
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "bid",
+          "writable": true
+        },
+        {
+          "name": "funder_quote",
+          "writable": true
+        },
+        {
+          "name": "refund_to"
+        },
+        {
+          "name": "bid_vault",
+          "writable": true,
+          "relations": [
+            "offer"
+          ]
+        },
+        {
+          "name": "seller_holder",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "offer.seller",
+                "account": "Offer"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                10,
+                5,
+                172,
+                55,
+                36,
+                59,
+                39,
+                107,
+                223,
+                29,
+                192,
+                239,
+                41,
+                105,
+                255,
+                6,
+                250,
+                89,
+                112,
+                225,
+                198,
+                8,
+                146,
+                232,
+                110,
+                193,
+                197,
+                35,
+                213,
+                38,
+                108,
+                216
+              ]
+            }
+          }
+        },
+        {
+          "name": "hook_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                10,
+                5,
+                172,
+                55,
+                36,
+                59,
+                39,
+                107,
+                223,
+                29,
+                192,
+                239,
+                41,
+                105,
+                255,
+                6,
+                250,
+                89,
+                112,
+                225,
+                198,
+                8,
+                146,
+                232,
+                110,
+                193,
+                197,
+                35,
+                213,
+                38,
+                108,
+                216
+              ]
+            }
+          }
+        },
+        {
+          "name": "quote_token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "kind",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "sell_remainder",
+      "discriminator": [
+        46,
+        250,
+        110,
+        70,
+        221,
+        110,
+        62,
+        185
+      ],
+      "accounts": [
+        {
+          "name": "cranker",
+          "signer": true
+        },
+        {
+          "name": "seller"
+        },
+        {
+          "name": "market"
+        },
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "offer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "offer.id",
+                "account": "Offer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "pool",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "book",
+            "offer"
+          ]
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "base_vault",
+          "writable": true
+        },
+        {
+          "name": "quote_vault",
+          "writable": true
+        },
+        {
+          "name": "fee_vault",
+          "writable": true
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "relations": [
+            "book"
+          ]
+        },
+        {
+          "name": "seller_quote",
+          "writable": true,
+          "relations": [
+            "offer"
+          ]
+        },
+        {
+          "name": "amm_program",
+          "address": "8m9GWYsGaqmGECJnN6kipQXiaJfk8t2MhS8U5LugUw8b"
+        },
+        {
+          "name": "base_token_program"
+        },
+        {
+          "name": "quote_token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle",
+      "discriminator": [
+        175,
+        42,
+        185,
+        87,
+        144,
+        131,
+        102,
+        212
+      ],
+      "accounts": [
+        {
+          "name": "shield_authority",
+          "docs": [
+            "Shield PDA of the chest program: settlement is always routed through",
+            "the chest program so the Shield's priority slice is booked atomically",
+            "(D-025)."
+          ],
+          "signer": true
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Pays rent for the Return Ticket (keeper / cranker)."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "market",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  97,
+                  114,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                146,
+                194,
+                197,
+                175,
+                129,
+                72,
+                192,
+                202,
+                160,
+                255,
+                104,
+                41,
+                156,
+                110,
+                33,
+                20,
+                233,
+                213,
+                21,
+                55,
+                155,
+                172,
+                76,
+                53,
+                47,
+                36,
+                86,
+                111,
+                206,
+                239,
+                29,
+                156
+              ]
+            }
+          }
+        },
+        {
+          "name": "book",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  111,
+                  111,
+                  107
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "offer",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "offer.id",
+                "account": "Offer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "market",
+            "book",
+            "offer"
+          ]
+        },
+        {
+          "name": "quote_mint"
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "relations": [
+            "book"
+          ]
+        },
+        {
+          "name": "bid_vault",
+          "writable": true,
+          "relations": [
+            "offer"
+          ]
+        },
+        {
+          "name": "seller_quote",
+          "writable": true,
+          "relations": [
+            "offer"
+          ]
+        },
+        {
+          "name": "fee_vault",
+          "writable": true,
+          "relations": [
+            "market"
+          ]
+        },
+        {
+          "name": "shield_quote_vault",
+          "writable": true
+        },
+        {
+          "name": "shield_token_vault",
+          "writable": true
+        },
+        {
+          "name": "ticket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "offer.seller",
+                "account": "Offer"
+              },
+              {
+                "kind": "account",
+                "path": "offer.id",
+                "account": "Offer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "slot_hashes",
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "base_token_program",
+          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        },
+        {
+          "name": "quote_token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "shield_lots",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Bid",
+      "discriminator": [
+        143,
+        246,
+        48,
+        245,
+        42,
+        145,
+        180,
+        88
+      ]
+    },
+    {
+      "name": "Offer",
+      "discriminator": [
+        215,
+        88,
+        60,
+        71,
+        170,
+        162,
+        73,
+        229
+      ]
+    },
+    {
+      "name": "OfferBook",
+      "discriminator": [
+        80,
+        6,
+        238,
+        248,
+        107,
+        81,
+        195,
+        99
+      ]
+    },
+    {
+      "name": "Ticket",
+      "discriminator": [
+        41,
+        228,
+        24,
+        165,
+        78,
+        90,
+        235,
+        200
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "BidClaimed",
+      "discriminator": [
+        187,
+        133,
+        70,
+        99,
+        108,
+        104,
+        243,
+        174
+      ]
+    },
+    {
+      "name": "BidPlaced",
+      "discriminator": [
+        135,
+        53,
+        176,
+        83,
+        193,
+        69,
+        108,
+        61
+      ]
+    },
+    {
+      "name": "BiddingClosed",
+      "discriminator": [
+        31,
+        40,
+        34,
+        146,
+        5,
+        143,
+        254,
+        187
+      ]
+    },
+    {
+      "name": "OfferClosed",
+      "discriminator": [
+        237,
+        38,
+        102,
+        204,
+        165,
+        180,
+        177,
+        164
+      ]
+    },
+    {
+      "name": "OfferCreated",
+      "discriminator": [
+        31,
+        236,
+        215,
+        144,
+        75,
+        45,
+        157,
+        87
+      ]
+    },
+    {
+      "name": "OfferSettled",
+      "discriminator": [
+        28,
+        72,
+        212,
+        133,
+        229,
+        156,
+        62,
+        254
+      ]
+    },
+    {
+      "name": "RemainderSold",
+      "discriminator": [
+        74,
+        138,
+        22,
+        92,
+        3,
+        52,
+        236,
+        67
+      ]
+    },
+    {
+      "name": "TicketIssued",
+      "discriminator": [
+        176,
+        133,
+        7,
+        76,
+        129,
+        230,
+        198,
+        8
+      ]
+    },
+    {
+      "name": "TicketUsed",
+      "discriminator": [
+        40,
+        141,
+        252,
+        141,
+        160,
+        110,
+        147,
+        80
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Caller is not authorised"
+    },
+    {
+      "code": 6001,
+      "name": "OffersPaused",
+      "msg": "New offers are paused (emergency)"
+    },
+    {
+      "code": 6002,
+      "name": "BelowMinimumOffer",
+      "msg": "Offer is below the minimum offer size; sell directly on the AMM"
+    },
+    {
+      "code": 6003,
+      "name": "HolderRequired",
+      "msg": "Seller must have a registered holder account"
+    },
+    {
+      "code": 6004,
+      "name": "MessageTooLong",
+      "msg": "Offer message exceeds 140 bytes"
+    },
+    {
+      "code": 6005,
+      "name": "NotOpen",
+      "msg": "Offer is not open for bids"
+    },
+    {
+      "code": 6006,
+      "name": "WindowEnded",
+      "msg": "Bidding window has ended"
+    },
+    {
+      "code": 6007,
+      "name": "SelfBid",
+      "msg": "Sellers cannot bid on their own offers"
+    },
+    {
+      "code": 6008,
+      "name": "LinkedWallet",
+      "msg": "Bidder funded the seller within the self-fill window"
+    },
+    {
+      "code": 6009,
+      "name": "BidTooSmall",
+      "msg": "Bid is smaller than one lot"
+    },
+    {
+      "code": 6010,
+      "name": "CannotCloseYet",
+      "msg": "Bidding cannot be closed yet"
+    },
+    {
+      "code": 6011,
+      "name": "NotClosing",
+      "msg": "Offer is not ready to settle"
+    },
+    {
+      "code": 6012,
+      "name": "RandomnessPending",
+      "msg": "Randomness slot not reached yet"
+    },
+    {
+      "code": 6013,
+      "name": "RandomnessUnavailable",
+      "msg": "Randomness unavailable for the committed slot (re-arm with close_bidding)"
+    },
+    {
+      "code": 6014,
+      "name": "ShieldSliceTooLarge",
+      "msg": "Shield slice exceeds the maximum share"
+    },
+    {
+      "code": 6015,
+      "name": "NotSettled",
+      "msg": "Offer is not settled"
+    },
+    {
+      "code": 6016,
+      "name": "NoRemainder",
+      "msg": "Remainder already sold or nothing to sell"
+    },
+    {
+      "code": 6017,
+      "name": "OfferNotFinished",
+      "msg": "Offer still has unclaimed bids or unsold remainder"
+    },
+    {
+      "code": 6018,
+      "name": "AccountMismatch",
+      "msg": "Account does not match the offer"
+    },
+    {
+      "code": 6019,
+      "name": "TicketUnavailable",
+      "msg": "Return Ticket expired or exhausted"
+    },
+    {
+      "code": 6020,
+      "name": "MathOverflow",
+      "msg": "Arithmetic error"
+    }
+  ],
+  "types": [
+    {
+      "name": "Bid",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "name": "offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "bidder",
+            "docs": [
+              "Wallet that receives the tokens (and tenure credit)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "refund_to",
+            "docs": [
+              "Account the refund is returned to (bidder's quote ATA or chest vault)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "rent_payer",
+            "docs": [
+              "Receives the bid account's rent on claim."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Quote locked (= capacity × lot_cost)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "capacity",
+            "type": "u64"
+          },
+          {
+            "name": "prefix",
+            "docs": [
+              "Σ capacities of earlier bids (`Q_i`)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "bid",
+            "type": "pubkey"
+          },
+          {
+            "name": "bidder",
+            "type": "pubkey"
+          },
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "name": "lots",
+            "type": "u64"
+          },
+          {
+            "name": "tokens",
+            "type": "u64"
+          },
+          {
+            "name": "cost",
+            "type": "u64"
+          },
+          {
+            "name": "refund",
+            "type": "u64"
+          },
+          {
+            "name": "tenure_credited_raw",
+            "type": "u128"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidPlaced",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "bid",
+            "type": "pubkey"
+          },
+          {
+            "name": "bidder",
+            "type": "pubkey"
+          },
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "capacity",
+            "type": "u64"
+          },
+          {
+            "name": "prefix",
+            "type": "u64"
+          },
+          {
+            "name": "total_capacity",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BiddingClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "rand_slot",
+            "type": "u64"
+          },
+          {
+            "name": "early",
+            "type": "bool"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeStats",
+      "docs": [
+        "Lifetime fee accounting (invariant: collected == Σ components)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "distributed",
+            "type": "u64"
+          },
+          {
+            "name": "to_chests",
+            "type": "u64"
+          },
+          {
+            "name": "to_shield",
+            "type": "u64"
+          },
+          {
+            "name": "to_treasury",
+            "type": "u64"
+          },
+          {
+            "name": "to_parent",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Holder",
+      "docs": [
+        "Per-wallet tenure, weight and reward checkpoint."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "last_ts",
+            "type": "i64"
+          },
+          {
+            "name": "registered_at",
+            "type": "i64"
+          },
+          {
+            "name": "cap_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "reward_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "pending_rewards",
+            "type": "u64"
+          },
+          {
+            "name": "lifetime_rewards",
+            "type": "u64"
+          },
+          {
+            "name": "ds_window_start",
+            "type": "i64"
+          },
+          {
+            "name": "ds_amount",
+            "type": "u64"
+          },
+          {
+            "name": "recent_ts",
+            "type": {
+              "array": [
+                "i64",
+                8
+              ]
+            }
+          },
+          {
+            "name": "acc",
+            "type": {
+              "defined": {
+                "name": "backstop_hook::state::PodU128"
+              }
+            }
+          },
+          {
+            "name": "alpha",
+            "type": {
+              "defined": {
+                "name": "PodI128"
+              }
+            }
+          },
+          {
+            "name": "beta",
+            "type": {
+              "defined": {
+                "name": "PodI128"
+              }
+            }
+          },
+          {
+            "name": "cap",
+            "type": {
+              "defined": {
+                "name": "backstop_hook::state::PodU128"
+              }
+            }
+          },
+          {
+            "name": "r_snap",
+            "type": {
+              "defined": {
+                "name": "backstop_hook::state::PodU128"
+              }
+            }
+          },
+          {
+            "name": "rt_snap",
+            "type": {
+              "defined": {
+                "name": "backstop_hook::state::PodU128"
+              }
+            }
+          },
+          {
+            "name": "recent_senders",
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "recent_head",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "_pad",
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
+            }
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookConfig",
+      "docs": [
+        "Market-level hook configuration (Borsh account, rarely written)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "reward_bump",
+            "type": "u8"
+          },
+          {
+            "name": "reward_ready",
+            "docs": [
+              "RewardState has reached its full size and is initialised."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "governance",
+            "docs": [
+              "Governance (Squads multisig vault on mainnet)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_governance",
+            "docs": [
+              "Two-step governance transfer target (default = none)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "core_authority",
+            "docs": [
+              "`backstop-core` market PDA: may deposit rewards and record burns."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "offers_authority",
+            "docs": [
+              "`backstop-offers` book PDA: may credit absorb tenure."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "chest_authority",
+            "docs": [
+              "`backstop-chest` chest-market PDA: may harvest rewards into chests."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_authority",
+            "docs": [
+              "`backstop-amm` pool PDA: transfers into it from wallets are direct sells."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "allowed_programs",
+            "docs": [
+              "Programs that may be the top-level instruction of a token movement."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "allowed_owners",
+            "docs": [
+              "Off-curve token-account owners permitted to receive tokens."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "tenure_cap_secs",
+            "docs": [
+              "Average age at which the tenure multiplier caps (default 90 d)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "tenure_extra_bps",
+            "docs": [
+              "Multiplier above 1.0 at the cap, bps (default 20_000 → 3.0×)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "absorb_tenure_bps",
+            "docs": [
+              "Share of a seller's lot tenure transferred to absorbers (default 40 %)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "direct_sell_cap",
+            "docs": [
+              "Rolling per-wallet cap on direct AMM sells (default = min offer size)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "direct_sell_window_secs",
+            "type": "u64"
+          },
+          {
+            "name": "link_min_amount",
+            "docs": [
+              "Minimum direct transfer recorded in the recent-sender ring."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "link_window_secs",
+            "type": "u64"
+          },
+          {
+            "name": "epoch_secs",
+            "docs": [
+              "Distribution epoch length — immutable after initialisation."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "genesis_ts",
+            "docs": [
+              "Boundary 0 timestamp — immutable after initialisation."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "holders",
+            "type": "u64"
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Market",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "treasury_bump",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_token_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_decimals",
+            "type": "u8"
+          },
+          {
+            "name": "parent",
+            "docs": [
+              "Parent market for launchpad children (default for BACKSTOP itself)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "governance",
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_governance",
+            "type": "pubkey"
+          },
+          {
+            "name": "guardian",
+            "docs": [
+              "May only *set* pause flags (immediate emergency stop)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "keeper",
+            "docs": [
+              "Executes fee swaps (bounded by the oracle and slippage cap)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "swap_program",
+            "docs": [
+              "Swap program allowed for fee conversion (Jupiter v6 on mainnet)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pauses",
+            "type": "u8"
+          },
+          {
+            "name": "redemption_paused",
+            "docs": [
+              "Redemption can only be paused through the 48 h timelock."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "params",
+            "type": {
+              "defined": {
+                "name": "MarketParams"
+              }
+            }
+          },
+          {
+            "name": "oracle",
+            "type": {
+              "defined": {
+                "name": "OracleConfig"
+              }
+            }
+          },
+          {
+            "name": "fee_vault",
+            "docs": [
+              "Quote ATA of this market PDA receiving all trade fees."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury_quote_vault",
+            "docs": [
+              "Quote ATA of the treasury PDA (treasury share awaiting conversion)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "holder_rewards_vault",
+            "docs": [
+              "Chest program vault receiving holder rewards."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "shield_rewards_vault",
+            "docs": [
+              "Chest program vault receiving Shield rewards."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "parent_vault",
+            "docs": [
+              "Quote ATA of this market PDA holding the parent's share (children)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_base_vault",
+            "docs": [
+              "AMM base vault (protocol-held supply excluded from circulation)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "fees",
+            "type": {
+              "defined": {
+                "name": "FeeStats"
+              }
+            }
+          },
+          {
+            "name": "treasury_sol_in",
+            "docs": [
+              "Lamports received from fee conversion."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "redeemed_tokens",
+            "type": "u64"
+          },
+          {
+            "name": "redeemed_lamports",
+            "type": "u64"
+          },
+          {
+            "name": "shield_lamports_pending",
+            "docs": [
+              "Redemption fees (lamports) awaiting conversion to Shield rewards."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MarketParams",
+      "docs": [
+        "Every governable parameter of a market (spec §3). Defaults in",
+        "[`MarketParams::defaults`]."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "trade_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "split_chest_bps",
+            "type": "u16"
+          },
+          {
+            "name": "split_shield_bps",
+            "type": "u16"
+          },
+          {
+            "name": "parent_share_bps",
+            "docs": [
+              "Share of gross fees routed to the parent market (children only)."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "base_discount_bps",
+            "type": "u16"
+          },
+          {
+            "name": "k_up_bps",
+            "type": "u16"
+          },
+          {
+            "name": "k_down_bps",
+            "type": "u16"
+          },
+          {
+            "name": "min_discount_bps",
+            "type": "u16"
+          },
+          {
+            "name": "max_discount_bps",
+            "type": "u16"
+          },
+          {
+            "name": "offer_window_secs",
+            "type": "u32"
+          },
+          {
+            "name": "bid_epoch_secs",
+            "type": "u32"
+          },
+          {
+            "name": "min_offer_size",
+            "type": "u64"
+          },
+          {
+            "name": "lots_per_offer",
+            "type": "u16"
+          },
+          {
+            "name": "ticket_validity_secs",
+            "type": "u32"
+          },
+          {
+            "name": "chest_lock_secs",
+            "type": "u32"
+          },
+          {
+            "name": "chest_penalty_bps",
+            "type": "u16"
+          },
+          {
+            "name": "redemption_fee_bps",
+            "type": "u16"
+          },
+          {
+            "name": "yield_buffer_bps",
+            "type": "u16"
+          },
+          {
+            "name": "shield_per_offer_cap",
+            "type": "u64"
+          },
+          {
+            "name": "shield_max_share_bps",
+            "type": "u16"
+          },
+          {
+            "name": "shield_min_lock_secs",
+            "type": "u32"
+          },
+          {
+            "name": "shield_max_multiplier_bps",
+            "type": "u32"
+          },
+          {
+            "name": "shield_max_premium_bps",
+            "docs": [
+              "Shield skips offers whose short TWAP exceeds the hourly TWAP by more",
+              "than this (pump-and-dump protection)."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "price_twap_window_secs",
+            "type": "u32"
+          },
+          {
+            "name": "momentum_lookback_secs",
+            "type": "u32"
+          },
+          {
+            "name": "direct_sell_hourly_cap",
+            "docs": [
+              "Global cap on direct (sub-minimum) AMM sells per hour, base units."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_swap_slippage_bps",
+            "docs": [
+              "Max slippage vs. oracle on keeper fee swaps (spec: 0.5 %)."
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "max_swap_chunk",
+            "docs": [
+              "Max single keeper swap; larger amounts are TWAP-chunked by the keeper."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Offer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "type": "u8"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller_quote",
+            "docs": [
+              "Seller's quote account receiving fill and remainder proceeds."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bid_vault",
+            "docs": [
+              "ATA(offer, quote) holding bid funds."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          },
+          {
+            "name": "covered_at",
+            "type": "i64"
+          },
+          {
+            "name": "closed_at",
+            "type": "i64"
+          },
+          {
+            "name": "settled_at",
+            "type": "i64"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Tokens escrowed at creation."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "lots",
+            "type": "u64"
+          },
+          {
+            "name": "lot_size",
+            "type": "u64"
+          },
+          {
+            "name": "lot_cost",
+            "type": "u64"
+          },
+          {
+            "name": "dust",
+            "type": "u64"
+          },
+          {
+            "name": "twap",
+            "docs": [
+              "TWAP at creation (quote per base × 1e18) and the frozen fill price."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "fill_price",
+            "type": "u128"
+          },
+          {
+            "name": "discount_bps",
+            "type": "u32"
+          },
+          {
+            "name": "momentum_bps",
+            "type": "i64"
+          },
+          {
+            "name": "bid_epoch_secs",
+            "type": "u32"
+          },
+          {
+            "name": "seller_lot_tenure",
+            "docs": [
+              "Tenure carried by the escrowed tokens (seller's lot tenure)."
+            ],
+            "type": "u128"
+          },
+          {
+            "name": "total_capacity",
+            "docs": [
+              "Σ bid capacities (lots) — `C` in the allocation."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "bid_count",
+            "type": "u32"
+          },
+          {
+            "name": "bid_quote_total",
+            "type": "u64"
+          },
+          {
+            "name": "rand_slot",
+            "type": "u64"
+          },
+          {
+            "name": "seed",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "random_offset",
+            "docs": [
+              "Systematic-sampling offset `U ∈ [0, C)`."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "shield_lots",
+            "type": "u64"
+          },
+          {
+            "name": "bidder_lots",
+            "docs": [
+              "Lots allocated to bidders: min(C, lots − shield_lots)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "remainder_tokens",
+            "type": "u64"
+          },
+          {
+            "name": "remainder_sold",
+            "type": "bool"
+          },
+          {
+            "name": "proceeds",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "remainder_proceeds",
+            "type": "u64"
+          },
+          {
+            "name": "claimed_count",
+            "type": "u32"
+          },
+          {
+            "name": "tokens_claimed",
+            "type": "u64"
+          },
+          {
+            "name": "escrowed",
+            "docs": [
+              "Tokens still in escrow for this offer."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "message_len",
+            "type": "u8"
+          },
+          {
+            "name": "message",
+            "type": {
+              "array": [
+                "u8",
+                140
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "OfferBook",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "escrow_vault",
+            "docs": [
+              "ATA(book, mint): escrow for every offer of this market (D-013)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "next_offer_id",
+            "type": "u64"
+          },
+          {
+            "name": "open_offers",
+            "type": "u64"
+          },
+          {
+            "name": "total_escrowed",
+            "docs": [
+              "Σ offer.escrowed — always equals the escrow vault balance."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "offers_created",
+            "type": "u64"
+          },
+          {
+            "name": "tokens_offered",
+            "type": "u64"
+          },
+          {
+            "name": "tokens_absorbed",
+            "type": "u64"
+          },
+          {
+            "name": "tokens_to_shield",
+            "type": "u64"
+          },
+          {
+            "name": "tokens_to_amm",
+            "type": "u64"
+          },
+          {
+            "name": "quote_to_sellers",
+            "type": "u64"
+          },
+          {
+            "name": "fees_paid",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OfferClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OfferCreated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "lots",
+            "type": "u64"
+          },
+          {
+            "name": "lot_size",
+            "type": "u64"
+          },
+          {
+            "name": "lot_cost",
+            "type": "u64"
+          },
+          {
+            "name": "twap",
+            "type": "u128"
+          },
+          {
+            "name": "fill_price",
+            "type": "u128"
+          },
+          {
+            "name": "discount_bps",
+            "type": "u32"
+          },
+          {
+            "name": "momentum_bps",
+            "type": "i64"
+          },
+          {
+            "name": "seller_lot_tenure",
+            "type": "u128"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          },
+          {
+            "name": "message",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OfferSettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "shield_lots",
+            "type": "u64"
+          },
+          {
+            "name": "bidder_lots",
+            "type": "u64"
+          },
+          {
+            "name": "total_capacity",
+            "type": "u64"
+          },
+          {
+            "name": "random_offset",
+            "type": "u64"
+          },
+          {
+            "name": "seed",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "proceeds",
+            "type": "u64"
+          },
+          {
+            "name": "fee",
+            "type": "u64"
+          },
+          {
+            "name": "seller_net",
+            "type": "u64"
+          },
+          {
+            "name": "remainder_tokens",
+            "type": "u64"
+          },
+          {
+            "name": "ticket_amount",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleConfig",
+      "docs": [
+        "Price source used to bound keeper swaps."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "kind",
+            "docs": [
+              "0 = governance-set manual price (localnet/devnet), 1 = Pyth PriceUpdateV2."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "feed",
+            "docs": [
+              "Pyth price-update account (kind = 1)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "manual_quote_per_sol",
+            "docs": [
+              "Manual price: quote base units per 1 SOL (1e9 lamports)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "max_staleness_secs",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PodI128",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bytes",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PodObservation",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "ts",
+            "type": "i64"
+          },
+          {
+            "name": "cumulative",
+            "type": {
+              "defined": {
+                "name": "backstop_amm::state::PodU128"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Pool",
+      "docs": [
+        "Constant-product pool. Liquidity is protocol-owned and cannot be",
+        "withdrawn (D-015). Reserves are tracked internally (donations ignored)."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "market",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "quote_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "base_reserve",
+            "type": "u64"
+          },
+          {
+            "name": "quote_reserve",
+            "type": "u64"
+          },
+          {
+            "name": "fees_collected",
+            "type": "u64"
+          },
+          {
+            "name": "volume_base",
+            "type": "u64"
+          },
+          {
+            "name": "volume_quote",
+            "type": "u64"
+          },
+          {
+            "name": "swaps",
+            "type": "u64"
+          },
+          {
+            "name": "direct_hour_start",
+            "type": "i64"
+          },
+          {
+            "name": "direct_hour_sold",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "oracle_last_ts",
+            "type": "i64"
+          },
+          {
+            "name": "oracle_head",
+            "type": "u16"
+          },
+          {
+            "name": "oracle_len",
+            "type": "u16"
+          },
+          {
+            "name": "oracle_min_interval",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "quote_decimals",
+            "type": "u8"
+          },
+          {
+            "name": "_pad",
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
+            }
+          },
+          {
+            "name": "oracle_cumulative",
+            "type": {
+              "defined": {
+                "name": "backstop_amm::state::PodU128"
+              }
+            }
+          },
+          {
+            "name": "oracle_last_price",
+            "type": {
+              "defined": {
+                "name": "backstop_amm::state::PodU128"
+              }
+            }
+          },
+          {
+            "name": "observations",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "PodObservation"
+                  }
+                },
+                96
+              ]
+            }
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RemainderSold",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokens",
+            "type": "u64"
+          },
+          {
+            "name": "quote_out",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ticket",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer_id",
+            "type": "u64"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Tokens that may be re-bought fee-free."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "used",
+            "type": "u64"
+          },
+          {
+            "name": "created_at",
+            "type": "i64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TicketIssued",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer_id",
+            "type": "u64"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "expires_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TicketUsed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "offer_id",
+            "type": "u64"
+          },
+          {
+            "name": "tokens",
+            "type": "u64"
+          },
+          {
+            "name": "remaining",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "backstop_amm::state::PodU128",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bytes",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "backstop_hook::state::PodU128",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bytes",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

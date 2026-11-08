@@ -1,0 +1,2652 @@
+{
+  "address": "g86T56A9yM46y5cyVCVzB1K6MtV5cx89DsFiapy59eP",
+  "metadata": {
+    "name": "backstop_hook",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "BACKSTOP Token-2022 transfer hook: protocol allowlist, tenure accumulator and tenure-weighted reward accounting."
+  },
+  "instructions": [
+    {
+      "name": "accept_governance",
+      "discriminator": [
+        248,
+        124,
+        36,
+        211,
+        224,
+        191,
+        79,
+        227
+      ],
+      "accounts": [
+        {
+          "name": "new_governance",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "advance_epochs",
+      "discriminator": [
+        115,
+        96,
+        36,
+        134,
+        166,
+        247,
+        66,
+        162
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "max_steps",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "checkpoint",
+      "discriminator": [
+        213,
+        200,
+        19,
+        204,
+        240,
+        143,
+        184,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "close_holder",
+      "discriminator": [
+        88,
+        22,
+        239,
+        228,
+        245,
+        64,
+        37,
+        78
+      ],
+      "accounts": [
+        {
+          "name": "wallet",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holder",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              },
+              {
+                "kind": "account",
+                "path": "wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "credit_tenure",
+      "discriminator": [
+        17,
+        238,
+        194,
+        156,
+        254,
+        201,
+        159,
+        112
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "`backstop-offers` book PDA."
+          ],
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holder",
+          "writable": true
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "raw_lot_tenure",
+          "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "deposit_rewards",
+      "discriminator": [
+        52,
+        249,
+        112,
+        72,
+        206,
+        161,
+        196,
+        1
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "`backstop-core` market PDA (fee distributor)."
+          ],
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "docs": [
+        "SPL transfer-hook `Execute`, invoked by Token-2022 on every transfer."
+      ],
+      "discriminator": [
+        105,
+        37,
+        101,
+        197,
+        75,
+        251,
+        102,
+        26
+      ],
+      "accounts": [
+        {
+          "name": "source"
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "destination"
+        },
+        {
+          "name": "authority"
+        },
+        {
+          "name": "extra_metas"
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "instructions",
+          "address": "Sysvar1nstructions1111111111111111111111111"
+        },
+        {
+          "name": "src_holder",
+          "writable": true
+        },
+        {
+          "name": "dst_holder",
+          "writable": true
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "grow_reward_state",
+      "docs": [
+        "Grow the reward state by 10 KiB (call until `reward_ready`)."
+      ],
+      "discriminator": [
+        160,
+        218,
+        105,
+        132,
+        153,
+        31,
+        174,
+        133
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "harvest",
+      "discriminator": [
+        228,
+        241,
+        31,
+        182,
+        53,
+        169,
+        59,
+        199
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "`backstop-chest` chest-market PDA."
+          ],
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holder",
+          "writable": true
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [],
+      "returns": "u64"
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "Create the hook config, extra-account-meta list and the first chunk of",
+        "the reward state for `mint`. Signed by the current mint authority."
+      ],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint_authority",
+          "docs": [
+            "Current mint authority of `mint` (deployer at genesis; the launchpad",
+            "PDA for child tokens)."
+          ],
+          "signer": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "extra_metas",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  120,
+                  116,
+                  114,
+                  97,
+                  45,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  115
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "propose_governance",
+      "discriminator": [
+        129,
+        138,
+        213,
+        117,
+        56,
+        242,
+        208,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_governance",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "record_burn",
+      "discriminator": [
+        254,
+        128,
+        98,
+        33,
+        0,
+        74,
+        165,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "`backstop-core` market PDA."
+          ],
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holder",
+          "writable": true
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "wallet",
+          "type": "pubkey"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "register_holder",
+      "discriminator": [
+        113,
+        111,
+        117,
+        246,
+        175,
+        59,
+        98,
+        161
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "wallet",
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holder",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              },
+              {
+                "kind": "account",
+                "path": "wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "set_allowlist",
+      "discriminator": [
+        141,
+        30,
+        41,
+        131,
+        132,
+        7,
+        216,
+        134
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "programs",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "owners",
+          "type": {
+            "vec": "pubkey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_params",
+      "discriminator": [
+        27,
+        234,
+        178,
+        52,
+        147,
+        2,
+        187,
+        141
+      ],
+      "accounts": [
+        {
+          "name": "governance",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "HookParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sync_holder",
+      "discriminator": [
+        33,
+        218,
+        181,
+        194,
+        137,
+        165,
+        224,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "wallet",
+          "signer": true
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  111,
+                  107,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holder",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  111,
+                  108,
+                  100,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              },
+              {
+                "kind": "account",
+                "path": "wallet"
+              }
+            ]
+          }
+        },
+        {
+          "name": "reward_state",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  119,
+                  97,
+                  114,
+                  100,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "config.mint",
+                "account": "HookConfig"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Holder",
+      "discriminator": [
+        37,
+        121,
+        1,
+        40,
+        55,
+        46,
+        199,
+        157
+      ]
+    },
+    {
+      "name": "HookConfig",
+      "discriminator": [
+        137,
+        155,
+        101,
+        95,
+        138,
+        72,
+        8,
+        182
+      ]
+    },
+    {
+      "name": "RewardState",
+      "discriminator": [
+        86,
+        245,
+        149,
+        170,
+        90,
+        108,
+        31,
+        251
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AllowlistUpdated",
+      "discriminator": [
+        88,
+        239,
+        93,
+        65,
+        74,
+        140,
+        83,
+        213
+      ]
+    },
+    {
+      "name": "EpochsAdvanced",
+      "discriminator": [
+        186,
+        244,
+        137,
+        225,
+        119,
+        193,
+        151,
+        98
+      ]
+    },
+    {
+      "name": "HolderRegistered",
+      "discriminator": [
+        201,
+        78,
+        223,
+        133,
+        103,
+        164,
+        173,
+        136
+      ]
+    },
+    {
+      "name": "HolderSynced",
+      "discriminator": [
+        65,
+        47,
+        59,
+        202,
+        75,
+        82,
+        26,
+        121
+      ]
+    },
+    {
+      "name": "HookInitialized",
+      "discriminator": [
+        127,
+        123,
+        212,
+        103,
+        69,
+        142,
+        254,
+        152
+      ]
+    },
+    {
+      "name": "HookParamsUpdated",
+      "discriminator": [
+        50,
+        86,
+        7,
+        64,
+        97,
+        226,
+        115,
+        23
+      ]
+    },
+    {
+      "name": "RewardsDeposited",
+      "discriminator": [
+        120,
+        19,
+        149,
+        33,
+        111,
+        163,
+        248,
+        156
+      ]
+    },
+    {
+      "name": "RewardsHarvested",
+      "discriminator": [
+        27,
+        248,
+        121,
+        187,
+        166,
+        132,
+        212,
+        89
+      ]
+    },
+    {
+      "name": "TenureCredited",
+      "discriminator": [
+        200,
+        10,
+        30,
+        95,
+        55,
+        229,
+        143,
+        101
+      ]
+    },
+    {
+      "name": "TenureReset",
+      "discriminator": [
+        55,
+        211,
+        193,
+        138,
+        46,
+        123,
+        2,
+        142
+      ]
+    },
+    {
+      "name": "TransferTracked",
+      "discriminator": [
+        247,
+        80,
+        12,
+        39,
+        45,
+        133,
+        250,
+        107
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UnauthorizedProgram",
+      "msg": "Token movement initiated by a program that is not on the protocol allowlist"
+    },
+    {
+      "code": 6001,
+      "name": "UnauthorizedDestination",
+      "msg": "Destination owner is a program account that is not on the protocol allowlist"
+    },
+    {
+      "code": 6002,
+      "name": "DirectTransferToProtocolAccount",
+      "msg": "Direct transfers may only target wallet (on-curve) owners"
+    },
+    {
+      "code": 6003,
+      "name": "MissingImmutableOwner",
+      "msg": "Destination token account must have the ImmutableOwner extension"
+    },
+    {
+      "code": 6004,
+      "name": "NotTransferring",
+      "msg": "Hook invoked outside of a Token-2022 transfer"
+    },
+    {
+      "code": 6005,
+      "name": "MintMismatch",
+      "msg": "Token account does not belong to this mint"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidTokenAccount",
+      "msg": "Account is not a Token-2022 account"
+    },
+    {
+      "code": 6007,
+      "name": "WrongHookProgram",
+      "msg": "Mint does not use this program as its transfer hook"
+    },
+    {
+      "code": 6008,
+      "name": "NotMintAuthority",
+      "msg": "Signer is not the current mint authority"
+    },
+    {
+      "code": 6009,
+      "name": "Unauthorized",
+      "msg": "Caller is not authorised for this instruction"
+    },
+    {
+      "code": 6010,
+      "name": "DirectSellCapExceeded",
+      "msg": "Direct AMM sells exceed the rolling per-wallet cap; create an offer instead"
+    },
+    {
+      "code": 6011,
+      "name": "DirectSellRequiresHolder",
+      "msg": "Direct AMM sells require a registered holder account"
+    },
+    {
+      "code": 6012,
+      "name": "RewardStateNotReady",
+      "msg": "Reward state is not fully initialised (call grow_reward_state)"
+    },
+    {
+      "code": 6013,
+      "name": "EpochCatchUpRequired",
+      "msg": "Reward epochs are too far behind; call advance_epochs first"
+    },
+    {
+      "code": 6014,
+      "name": "HolderMismatch",
+      "msg": "Holder account does not match the wallet or mint"
+    },
+    {
+      "code": 6015,
+      "name": "HolderNotEmpty",
+      "msg": "Holder still has a balance or unharvested rewards"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidParameter",
+      "msg": "Invalid parameter"
+    },
+    {
+      "code": 6017,
+      "name": "AllowlistFull",
+      "msg": "Too many allowlist entries"
+    },
+    {
+      "code": 6018,
+      "name": "DuplicateAccount",
+      "msg": "Duplicate token account in sync list"
+    },
+    {
+      "code": 6019,
+      "name": "MathOverflow",
+      "msg": "Arithmetic error"
+    },
+    {
+      "code": 6020,
+      "name": "Unavailable",
+      "msg": "Requested data is unavailable"
+    }
+  ],
+  "types": [
+    {
+      "name": "AllowlistUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "programs",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "owners",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EpochsAdvanced",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "from_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "to_epoch",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Holder",
+      "docs": [
+        "Per-wallet tenure, weight and reward checkpoint."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "last_ts",
+            "type": "i64"
+          },
+          {
+            "name": "registered_at",
+            "type": "i64"
+          },
+          {
+            "name": "cap_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "reward_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "pending_rewards",
+            "type": "u64"
+          },
+          {
+            "name": "lifetime_rewards",
+            "type": "u64"
+          },
+          {
+            "name": "ds_window_start",
+            "type": "i64"
+          },
+          {
+            "name": "ds_amount",
+            "type": "u64"
+          },
+          {
+            "name": "recent_ts",
+            "type": {
+              "array": [
+                "i64",
+                8
+              ]
+            }
+          },
+          {
+            "name": "acc",
+            "type": {
+              "defined": {
+                "name": "PodU128"
+              }
+            }
+          },
+          {
+            "name": "alpha",
+            "type": {
+              "defined": {
+                "name": "PodI128"
+              }
+            }
+          },
+          {
+            "name": "beta",
+            "type": {
+              "defined": {
+                "name": "PodI128"
+              }
+            }
+          },
+          {
+            "name": "cap",
+            "type": {
+              "defined": {
+                "name": "PodU128"
+              }
+            }
+          },
+          {
+            "name": "r_snap",
+            "type": {
+              "defined": {
+                "name": "PodU128"
+              }
+            }
+          },
+          {
+            "name": "rt_snap",
+            "type": {
+              "defined": {
+                "name": "PodU128"
+              }
+            }
+          },
+          {
+            "name": "recent_senders",
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "recent_head",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "_pad",
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
+            }
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "HolderRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HolderSynced",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookConfig",
+      "docs": [
+        "Market-level hook configuration (Borsh account, rarely written)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "reward_bump",
+            "type": "u8"
+          },
+          {
+            "name": "reward_ready",
+            "docs": [
+              "RewardState has reached its full size and is initialised."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "governance",
+            "docs": [
+              "Governance (Squads multisig vault on mainnet)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "pending_governance",
+            "docs": [
+              "Two-step governance transfer target (default = none)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "core_authority",
+            "docs": [
+              "`backstop-core` market PDA: may deposit rewards and record burns."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "offers_authority",
+            "docs": [
+              "`backstop-offers` book PDA: may credit absorb tenure."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "chest_authority",
+            "docs": [
+              "`backstop-chest` chest-market PDA: may harvest rewards into chests."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amm_authority",
+            "docs": [
+              "`backstop-amm` pool PDA: transfers into it from wallets are direct sells."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "allowed_programs",
+            "docs": [
+              "Programs that may be the top-level instruction of a token movement."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "allowed_owners",
+            "docs": [
+              "Off-curve token-account owners permitted to receive tokens."
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "tenure_cap_secs",
+            "docs": [
+              "Average age at which the tenure multiplier caps (default 90 d)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "tenure_extra_bps",
+            "docs": [
+              "Multiplier above 1.0 at the cap, bps (default 20_000 → 3.0×)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "absorb_tenure_bps",
+            "docs": [
+              "Share of a seller's lot tenure transferred to absorbers (default 40 %)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "direct_sell_cap",
+            "docs": [
+              "Rolling per-wallet cap on direct AMM sells (default = min offer size)."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "direct_sell_window_secs",
+            "type": "u64"
+          },
+          {
+            "name": "link_min_amount",
+            "docs": [
+              "Minimum direct transfer recorded in the recent-sender ring."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "link_window_secs",
+            "type": "u64"
+          },
+          {
+            "name": "epoch_secs",
+            "docs": [
+              "Distribution epoch length — immutable after initialisation."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "genesis_ts",
+            "docs": [
+              "Boundary 0 timestamp — immutable after initialisation."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "holders",
+            "type": "u64"
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "governance",
+            "type": "pubkey"
+          },
+          {
+            "name": "genesis_ts",
+            "type": "i64"
+          },
+          {
+            "name": "epoch_secs",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tenure_cap_secs",
+            "type": "u64"
+          },
+          {
+            "name": "tenure_extra_bps",
+            "type": "u32"
+          },
+          {
+            "name": "absorb_tenure_bps",
+            "type": "u32"
+          },
+          {
+            "name": "direct_sell_cap",
+            "type": "u64"
+          },
+          {
+            "name": "direct_sell_window_secs",
+            "type": "u64"
+          },
+          {
+            "name": "link_min_amount",
+            "type": "u64"
+          },
+          {
+            "name": "link_window_secs",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HookParamsUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "tenure_cap_secs",
+            "type": "u64"
+          },
+          {
+            "name": "tenure_extra_bps",
+            "type": "u32"
+          },
+          {
+            "name": "absorb_tenure_bps",
+            "type": "u32"
+          },
+          {
+            "name": "direct_sell_cap",
+            "type": "u64"
+          },
+          {
+            "name": "link_min_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "governance",
+            "type": "pubkey"
+          },
+          {
+            "name": "genesis_ts",
+            "type": "i64"
+          },
+          {
+            "name": "epoch_secs",
+            "type": "u64"
+          },
+          {
+            "name": "tenure_cap_secs",
+            "type": "u64"
+          },
+          {
+            "name": "tenure_extra_bps",
+            "type": "u32"
+          },
+          {
+            "name": "absorb_tenure_bps",
+            "type": "u32"
+          },
+          {
+            "name": "direct_sell_cap",
+            "type": "u64"
+          },
+          {
+            "name": "link_min_amount",
+            "type": "u64"
+          },
+          {
+            "name": "link_window_secs",
+            "type": "u64"
+          },
+          {
+            "name": "direct_sell_window_secs",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PodI128",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bytes",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PodSchedule",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "epoch",
+            "type": "u64"
+          },
+          {
+            "name": "da",
+            "type": {
+              "defined": {
+                "name": "PodI128"
+              }
+            }
+          },
+          {
+            "name": "db",
+            "type": {
+              "defined": {
+                "name": "PodI128"
+              }
+            }
+          },
+          {
+            "name": "dc",
+            "type": {
+              "defined": {
+                "name": "PodI128"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PodSnapshot",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "epoch",
+            "type": "u64"
+          },
+          {
+            "name": "r",
+            "type": {
+              "defined": {
+                "name": "PodU128"
+              }
+            }
+          },
+          {
+            "name": "rt",
+            "type": {
+              "defined": {
+                "name": "PodU128"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PodU128",
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bytes",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RewardState",
+      "docs": [
+        "Global reward accumulator + cap schedule ring for one market (~49 KB)."
+      ],
+      "serialization": "bytemuck",
+      "repr": {
+        "kind": "c"
+      },
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "last_epoch",
+            "type": "u64"
+          },
+          {
+            "name": "pending",
+            "type": "u64"
+          },
+          {
+            "name": "total_deposited",
+            "type": "u64"
+          },
+          {
+            "name": "total_distributed",
+            "type": "u64"
+          },
+          {
+            "name": "total_harvested",
+            "type": "u64"
+          },
+          {
+            "name": "holders",
+            "type": "u64"
+          },
+          {
+            "name": "a",
+            "type": {
+              "defined": {
+                "name": "PodI128"
+              }
+            }
+          },
+          {
+            "name": "b",
+            "type": {
+              "defined": {
+                "name": "PodI128"
+              }
+            }
+          },
+          {
+            "name": "c",
+            "type": {
+              "defined": {
+                "name": "PodU128"
+              }
+            }
+          },
+          {
+            "name": "r",
+            "type": {
+              "defined": {
+                "name": "PodU128"
+              }
+            }
+          },
+          {
+            "name": "rt",
+            "type": {
+              "defined": {
+                "name": "PodU128"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "version",
+            "type": "u8"
+          },
+          {
+            "name": "_pad",
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          },
+          {
+            "name": "schedule",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "PodSchedule"
+                  }
+                },
+                512
+              ]
+            }
+          },
+          {
+            "name": "snapshots",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "PodSnapshot"
+                  }
+                },
+                512
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RewardsDeposited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "epoch",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RewardsHarvested",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TenureCredited",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "raw_lot_tenure",
+            "type": "u128"
+          },
+          {
+            "name": "credited",
+            "type": "u128"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TenureReset",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferTracked",
+      "docs": [
+        "Emitted for every tracked token movement. `kind`: 0 = direct transfer,",
+        "1 = protocol-routed (AMM / offers / chest / launchpad)."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "src_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "dst_wallet",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "kind",
+            "type": "u8"
+          },
+          {
+            "name": "src_tracked",
+            "type": "bool"
+          },
+          {
+            "name": "dst_tracked",
+            "type": "bool"
+          },
+          {
+            "name": "ts",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}
