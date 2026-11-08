@@ -27,4 +27,6 @@ backstop-amm = { path = "../../programs/backstop-amm", features = ["no-entrypoin
 backstop-offers = { path = "../../programs/backstop-offers", features = ["no-entrypoint"] }
 backstop-chest = { path = "../../programs/backstop-chest", features = ["no-entrypoint"] }
 mock-lending = { path = "../../programs/mock-lending", features = ["no-entrypoint"] }
+backstop-launchpad = { path = "../../programs/backstop-launchpad", features = ["no-entrypoint"] }
+solana-account = "4"
 mock-swap = { path = "../../programs/mock-swap", features = ["no-entrypoint"] }

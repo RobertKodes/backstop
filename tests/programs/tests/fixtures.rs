@@ -13,14 +13,25 @@ fn lifecycle_logs_fixture() {
     let m = env.full_genesis(GenesisOpts::default());
     let mut txs: Vec<(String, u64, Vec<String>)> = vec![];
     let mut rec = |env: &Env, meta: litesvm::types::TransactionMetadata| {
-        txs.push((meta.signature.to_string(), env.svm.get_sysvar::<anchor_lang::prelude::Clock>().slot, meta.logs));
+        txs.push((
+            meta.signature.to_string(),
+            env.svm.get_sysvar::<anchor_lang::prelude::Clock>().slot,
+            meta.logs,
+        ));
     };
 
     let seller = env.trader(&m, 2_000 * USDC);
-    let ix = env.register_ix(&seller.pubkey(), &m.mint, &[Env::ata(&seller.pubkey(), &m.mint)]);
+    let ix = env.register_ix(
+        &seller.pubkey(),
+        &m.mint,
+        &[Env::ata(&seller.pubkey(), &m.mint)],
+    );
     let meta = env.send_ok(&[ix], &[&seller]);
     rec(&env, meta);
-    let meta = env.send_ok(&[env.buy_ix(&m, &seller.pubkey(), 1_000 * USDC, 0)], &[&seller]);
+    let meta = env.send_ok(
+        &[env.buy_ix(&m, &seller.pubkey(), 1_000 * USDC, 0)],
+        &[&seller],
+    );
     rec(&env, meta);
     env.warp(86_400);
 
@@ -29,7 +40,9 @@ fn lifecycle_logs_fixture() {
     env.open_chest(&m, &bidder.pubkey());
     let ix = anchor_lang::solana_program::instruction::Instruction::new_with_bytes(
         backstop_common::ids::CHEST,
-        &anchor_lang::InstructionData::data(&backstop_chest::instruction::Deposit { amount: 500 * USDC }),
+        &anchor_lang::InstructionData::data(&backstop_chest::instruction::Deposit {
+            amount: 500 * USDC,
+        }),
         anchor_lang::ToAccountMetas::to_account_metas(
             &backstop_chest::accounts::ChestTransfer {
                 owner: bidder.pubkey(),
@@ -37,7 +50,10 @@ fn lifecycle_logs_fixture() {
                 chest_market: backstop_common::pda::chest_market(&m.mint).0,
                 chest: backstop_common::pda::chest(&m.mint, &bidder.pubkey()).0,
                 quote_mint: m.quote,
-                vault: backstop_tests::flows::usdc_ata(&backstop_common::pda::chest_market(&m.mint).0, &m.quote),
+                vault: backstop_tests::flows::usdc_ata(
+                    &backstop_common::pda::chest_market(&m.mint).0,
+                    &m.quote,
+                ),
                 owner_quote: backstop_tests::flows::usdc_ata(&bidder.pubkey(), &m.quote),
                 shield_rewards_vault: backstop_common::pda::shield_rewards_vault(&m.mint).0,
                 quote_token_program: backstop_common::ids::TOKEN,
@@ -52,9 +68,22 @@ fn lifecycle_logs_fixture() {
     let meta = env.send_ok(&[ix], &[&seller]);
     rec(&env, meta);
     let o = env.offer(&m.mint, id);
-    let meta = env.send_ok(&[env.wallet_bid_ix(&m, id, &bidder.pubkey(), 40 * o.lot_cost)], &[&bidder]);
+    let meta = env.send_ok(
+        &[env.wallet_bid_ix(&m, id, &bidder.pubkey(), 40 * o.lot_cost)],
+        &[&bidder],
+    );
     rec(&env, meta);
-    let meta = env.send_ok(&[env.chest_bid_ix(&m, id, &bidder.pubkey(), &bidder.pubkey(), 10 * o.lot_cost, false)], &[&bidder]);
+    let meta = env.send_ok(
+        &[env.chest_bid_ix(
+            &m,
+            id,
+            &bidder.pubkey(),
+            &bidder.pubkey(),
+            10 * o.lot_cost,
+            false,
+        )],
+        &[&bidder],
+    );
     rec(&env, meta);
     env.warp(o.expires_at - env.now());
     env.close_bidding(&m, id).unwrap();
@@ -66,10 +95,16 @@ fn lifecycle_logs_fixture() {
     let meta = env.send_ok(&[env.claim_wallet_bid_ix(&m, id, &bidder.pubkey())], &[]);
     rec(&env, meta);
     let payer = env.payer.pubkey();
-    let meta = env.send_ok(&[env.chest_claim_ix(&m, id, &bidder.pubkey(), 1, &bidder.pubkey())], &[]);
+    let meta = env.send_ok(
+        &[env.chest_claim_ix(&m, id, &bidder.pubkey(), 1, &bidder.pubkey())],
+        &[],
+    );
     let _ = payer;
     rec(&env, meta);
-    let meta = env.send_ok(&[env.ticket_buy_ix(&m, &seller.pubkey(), id, 5 * USDC)], &[&seller]);
+    let meta = env.send_ok(
+        &[env.ticket_buy_ix(&m, &seller.pubkey(), id, 5 * USDC)],
+        &[&seller],
+    );
     rec(&env, meta);
     let meta = env.send_ok(&[env.distribute_fees_ix(&m)], &[]);
     rec(&env, meta);
@@ -85,15 +120,22 @@ fn lifecycle_logs_fixture() {
         .iter()
         .map(|(sig, slot, logs)| {
             let l: Vec<String> = logs.iter().map(|x| format!("{:?}", x)).collect();
-            format!("    {{ \"signature\": \"{sig}\", \"slot\": {slot}, \"logs\": [{}] }}", l.join(", "))
+            format!(
+                "    {{ \"signature\": \"{sig}\", \"slot\": {slot}, \"logs\": [{}] }}",
+                l.join(", ")
+            )
         })
         .collect();
     json += &rows.join(",\n");
     json += "\n  ]\n}\n";
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../indexer/test/fixtures/lifecycle.json");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../indexer/test/fixtures/lifecycle.json");
     if std::env::var("BACKSTOP_WRITE_FIXTURES").is_ok() {
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         std::fs::write(&path, &json).unwrap();
     }
-    assert!(path.exists(), "fixture missing — run with BACKSTOP_WRITE_FIXTURES=1");
+    assert!(
+        path.exists(),
+        "fixture missing — run with BACKSTOP_WRITE_FIXTURES=1"
+    );
 }

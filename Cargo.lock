@@ -662,6 +662,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "backstop-launchpad"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "backstop-amm",
+ "backstop-chest",
+ "backstop-common",
+ "backstop-core",
+ "backstop-hook",
+ "backstop-math",
+ "backstop-offers",
+ "spl-pod",
+]
+
+[[package]]
 name = "backstop-math"
 version = "0.1.0"
 dependencies = [
@@ -694,12 +710,14 @@ dependencies = [
  "backstop-common",
  "backstop-core",
  "backstop-hook",
+ "backstop-launchpad",
  "backstop-math",
  "backstop-offers",
  "bytemuck",
  "litesvm",
  "mock-lending",
  "mock-swap",
+ "solana-account",
  "solana-keypair",
  "solana-message",
  "solana-signer",

@@ -25,6 +25,7 @@ use solana_transaction::versioned::VersionedTransaction;
 use t22::extension::{ExtensionType, StateWithExtensionsOwned};
 
 pub mod flows;
+pub mod launch;
 pub mod market;
 
 pub const START_TS: i64 = 1_800_000_000;

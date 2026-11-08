@@ -1,0 +1,36 @@
+[package]
+name = "backstop-launchpad"
+version = "0.1.0"
+description = "BACKSTOP launchpad: permissionless factory for child tokens running on the same engine, paying 30% of fees to BACKSTOP holders."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "backstop_launchpad"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build", "backstop-core/idl-build", "backstop-amm/idl-build", "backstop-hook/idl-build", "backstop-offers/idl-build", "backstop-chest/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = { workspace = true }
+anchor-spl = { workspace = true }
+backstop-math = { workspace = true }
+backstop-common = { workspace = true }
+backstop-hook = { path = "../transfer-hook", features = ["cpi"] }
+backstop-core = { path = "../backstop-core", features = ["cpi"] }
+backstop-amm = { path = "../backstop-amm", features = ["cpi"] }
+backstop-offers = { path = "../backstop-offers", features = ["cpi"] }
+backstop-chest = { path = "../backstop-chest", features = ["cpi"] }
+spl-pod = "0.7"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }
