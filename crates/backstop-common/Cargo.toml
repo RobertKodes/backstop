@@ -1,0 +1,13 @@
+[package]
+name = "backstop-common"
+version = "0.1.0"
+description = "Program IDs, PDA seeds and default parameters shared by all BACKSTOP programs, tests and tooling."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+name = "backstop_common"
+
+[dependencies]
+anchor-lang = { workspace = true }

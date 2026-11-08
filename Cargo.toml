@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "crates/*",
-    # "programs/*",  (enabled in Phase 1 once programs exist)
+    "programs/*",
+    "tests/programs",
 ]
 resolver = "2"
 
@@ -12,10 +13,18 @@ publish = false
 
 [workspace.dependencies]
 anchor-lang = { version = "=1.2.2", features = ["init-if-needed"] }
-anchor-spl = { version = "=1.2.2", default-features = false, features = ["token", "token_2022", "token_2022_extensions", "associated_token", "idl-build"] }
+anchor-spl = { version = "=1.2.2", default-features = false, features = ["solana-v3", "token", "token_2022", "token_2022_extensions", "associated_token"] }
 spl-transfer-hook-interface = "=2.1.0"
 spl-tlv-account-resolution = "=0.11.4"
 spl-discriminator = "0.5.1"
+solana-curve25519 = "3.1"
+solana-instructions-sysvar = "3"
+bytemuck = { version = "1", features = ["derive", "min_const_generics"] }
+litesvm = "0.15"
+solana-keypair = "3"
+solana-signer = "3"
+solana-message = "4"
+solana-transaction = "4"
 uint = { version = "0.10", default-features = false }
 proptest = "1.5"
 backstop-math = { path = "crates/backstop-math" }

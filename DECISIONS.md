@@ -60,6 +60,22 @@ supports clock warping and Token-2022 hooks). The full TypeScript lifecycle
 test (SDK-level) runs against `solana-test-validator`/Surfpool via
 `anchor test`.
 
+### D-007 · Build script and the rustup ≥ 1.28 requirement
+`cargo-build-sbf` (Agave 4.x) links the platform tools as a rustup custom
+toolchain named like `1.95.0-sbpf-solana-v1.57`, which rustup < 1.28 (e.g.
+Ubuntu's packaged rustup 1.26) rejects. `scripts/build-programs.sh` builds
+each program (`anchor build --no-idl -p …`) then its IDL
+(`anchor idl build -p …`). With `BACKSTOP_NO_RUSTUP=1` it passes
+`--no-rustup-override` and points `$RUSTC` at the platform-tools compiler.
+CI uses an up-to-date rustup and needs no workaround.
+
+### D-008 · `Cargo.lock` seeded from the Anchor 1.2.2 template
+LiteSVM 0.15 only compiles against a specific Agave 4.1.x crate graph; a
+fresh resolve pulls Agave 4.4.x crates with breaking API changes. The lockfile
+was seeded from `anchor init`'s template lock (which pins that graph) and is
+committed. Do not `cargo update` agave/litesvm crates without re-running the
+full test suite.
+
 ---
 
 ## Program architecture
@@ -157,6 +173,16 @@ model with 4 000+ random scenarios).
 * **Idle wallets:** a wallet idle > ~128 days *after* reaching the cap falls
   back to a conservative payout (never over-pays). The keeper checkpoints any
   wallet approaching that horizon.
+
+### D-033 · Inline epoch catch-up is bounded (32 boundaries)
+Every hook-touching instruction first processes pending epoch boundaries
+(~340 CU each). Processing up to the 512-slot ring inline exhausted the
+compute budget (measured: 174k CU), so inline catch-up is capped at 32
+boundaries (8 days at 6 h epochs, ≤ ~11k CU). A larger backlog — only
+possible after 8 days with zero token movements — requires the permissionless
+`advance_epochs` crank, which the keeper runs every epoch and the SDK prepends
+automatically. Measured cost of a tracked transfer: ~58k CU steady state,
+~71k CU with 28 inline boundaries.
 
 ### D-021 · Accumulators use wrapping arithmetic
 Reward accumulators (`R`, `RT`) and the TWAP cumulative wrap like

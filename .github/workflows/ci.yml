@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AGAVE_VERSION: "4.4.1"
+  AGAVE_SHA256: "5b0f0fc7e4eedace05f6455de00aa1f2f3d1642068f1e8d50760ba49112c3941"
+  ANCHOR_VERSION: "1.2.2"
+  ANCHOR_SHA256: "e2c35a973bcfe476f3a89b120e99820f917229faf33d3e71f6625bd94199e741"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Programs — fmt, clippy, build, test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust toolchain (from rust-toolchain.toml)
+        run: rustup show active-toolchain || rustup toolchain install
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Install Agave CLI (checksum-verified)
+        run: |
+          curl -sSfL -o agave.tar.bz2 "https://github.com/anza-xyz/agave/releases/download/v${AGAVE_VERSION}/solana-release-x86_64-unknown-linux-gnu.tar.bz2"
+          echo "${AGAVE_SHA256}  agave.tar.bz2" | sha256sum -c -
+          mkdir -p "$HOME/agave" && tar -xjf agave.tar.bz2 -C "$HOME/agave"
+          echo "$HOME/agave/solana-release/bin" >> "$GITHUB_PATH"
+
+      - name: Install Anchor CLI (checksum-verified)
+        run: |
+          curl -sSfL -o anchor "https://github.com/otter-sec/anchor/releases/download/v${ANCHOR_VERSION}/anchor-${ANCHOR_VERSION}-x86_64-unknown-linux-gnu"
+          echo "${ANCHOR_SHA256}  anchor" | sha256sum -c -
+          install -m 0755 anchor "$HOME/.cargo/bin/anchor"
+
+      - name: Program keypairs (ephemeral, CI only)
+        # declare_id! values are fixed; CI only needs *a* keypair file per
+        # program for `anchor build`'s id check, which is a warning in 1.x.
+        run: |
+          mkdir -p target/deploy
+          for p in backstop_hook backstop_core backstop_amm backstop_offers backstop_chest backstop_launchpad mock_swap mock_lending; do
+            solana-keygen new --no-bip39-passphrase --silent -o "target/deploy/${p}-keypair.json" >/dev/null
+          done
+
+      - name: rustfmt
+        run: cargo fmt --all -- --check
+
+      - name: clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build programs + IDLs
+        run: scripts/build-programs.sh
+
+      - name: Unit, property and LiteSVM integration tests
+        run: cargo test --workspace
+
+      - name: Upload IDLs
+        uses: actions/upload-artifact@v4
+        with:
+          name: idl
+          path: target/idl/
+
+  typescript:
+    name: TypeScript — lint, typecheck, test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    if: hashFiles('pnpm-workspace.yaml') != ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r lint
+      - run: pnpm -r typecheck
+      - run: pnpm -r test

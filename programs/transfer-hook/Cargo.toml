@@ -1,0 +1,36 @@
+[package]
+name = "backstop-hook"
+version = "0.1.0"
+description = "BACKSTOP Token-2022 transfer hook: protocol allowlist, tenure accumulator and tenure-weighted reward accounting."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "backstop_hook"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+anchor-debug = []
+custom-heap = []
+custom-panic = []
+
+[dependencies]
+anchor-lang = { workspace = true }
+anchor-spl = { workspace = true }
+spl-transfer-hook-interface = { workspace = true }
+spl-tlv-account-resolution = { workspace = true }
+spl-discriminator = { workspace = true }
+solana-curve25519 = { workspace = true }
+solana-instructions-sysvar = { workspace = true }
+bytemuck = { workspace = true }
+backstop-math = { workspace = true }
+backstop-common = { workspace = true }
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(target_os, values("solana"))'] }

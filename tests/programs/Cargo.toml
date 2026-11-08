@@ -1,0 +1,25 @@
+[package]
+name = "backstop-tests"
+version = "0.1.0"
+description = "LiteSVM integration tests for the BACKSTOP program suite (requires `anchor build` first)."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+name = "backstop_tests"
+path = "src/lib.rs"
+
+[dependencies]
+anchor-lang = { workspace = true }
+anchor-spl = { workspace = true }
+bytemuck = { workspace = true }
+litesvm = { workspace = true }
+solana-keypair = { workspace = true }
+solana-signer = { workspace = true }
+solana-message = { workspace = true }
+solana-transaction = { workspace = true }
+backstop-common = { workspace = true }
+backstop-math = { workspace = true }
+backstop-hook = { path = "../../programs/transfer-hook", features = ["no-entrypoint"] }
+mock-swap = { path = "../../programs/mock-swap", features = ["no-entrypoint"] }

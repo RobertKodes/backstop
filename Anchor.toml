@@ -1,0 +1,34 @@
+[toolchain]
+anchor_version = "1.2.2"
+solana_version = "4.4.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+backstop_hook = "g86T56A9yM46y5cyVCVzB1K6MtV5cx89DsFiapy59eP"
+backstop_core = "AstnKdypNsaRAxX88cTCDCit11mCqeRRnQ2x6cfZJFzK"
+backstop_amm = "8m9GWYsGaqmGECJnN6kipQXiaJfk8t2MhS8U5LugUw8b"
+backstop_offers = "DW1bgui9AwKGmBxRryjGn6CtKYfo2aXuyeHXLxzewGj"
+backstop_chest = "5Hwrxz9JJoGxcZNSzP7TTAju2C2KMPtNBHtdifnU3tB5"
+backstop_launchpad = "ZzoHe1DMEHWDVnHQs7UnHJF8p6pdRVpk7629ygyLEXU"
+mock_swap = "6Z91SCsTwG12QF5A52G2TcvWXSrzToVe4d574TX3CHVg"
+mock_lending = "CFjsjWmeiniEPZoqm7sfRZErbTdAk5sHmQ2HTdBYyCwu"
+
+[programs.devnet]
+backstop_hook = "g86T56A9yM46y5cyVCVzB1K6MtV5cx89DsFiapy59eP"
+backstop_core = "AstnKdypNsaRAxX88cTCDCit11mCqeRRnQ2x6cfZJFzK"
+backstop_amm = "8m9GWYsGaqmGECJnN6kipQXiaJfk8t2MhS8U5LugUw8b"
+backstop_offers = "DW1bgui9AwKGmBxRryjGn6CtKYfo2aXuyeHXLxzewGj"
+backstop_chest = "5Hwrxz9JJoGxcZNSzP7TTAju2C2KMPtNBHtdifnU3tB5"
+backstop_launchpad = "ZzoHe1DMEHWDVnHQs7UnHJF8p6pdRVpk7629ygyLEXU"
+mock_swap = "6Z91SCsTwG12QF5A52G2TcvWXSrzToVe4d574TX3CHVg"
+mock_lending = "CFjsjWmeiniEPZoqm7sfRZErbTdAk5sHmQ2HTdBYyCwu"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cargo test --workspace"
