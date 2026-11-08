@@ -1,0 +1,39 @@
+[workspace]
+members = [
+    "crates/*",
+    # "programs/*",  (enabled in Phase 1 once programs exist)
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.89.0"
+publish = false
+
+[workspace.dependencies]
+anchor-lang = { version = "=1.2.2", features = ["init-if-needed"] }
+anchor-spl = { version = "=1.2.2", default-features = false, features = ["token", "token_2022", "token_2022_extensions", "associated_token", "idl-build"] }
+spl-transfer-hook-interface = "=2.1.0"
+spl-tlv-account-resolution = "=0.11.4"
+spl-discriminator = "0.5.1"
+uint = { version = "0.10", default-features = false }
+proptest = "1.5"
+backstop-math = { path = "crates/backstop-math" }
+backstop-common = { path = "crates/backstop-common" }
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1
+
+[profile.release.build-override]
+opt-level = 3
+incremental = false
+codegen-units = 1
+
+# Property tests are numeric-heavy; keep them fast in dev/test builds.
+[profile.test]
+opt-level = 2
+
+[profile.dev.package.proptest]
+opt-level = 3

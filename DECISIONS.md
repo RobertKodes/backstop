@@ -1,0 +1,244 @@
+# BACKSTOP — Decision Log
+
+Every non-obvious choice, the alternatives considered, and why they were
+rejected. Newest entries are appended at the end of each section. IDs are
+stable and referenced from code comments (`see D-012`).
+
+---
+
+## Toolchain & repository
+
+### D-001 · Build environment: WSL2 Ubuntu 24.04 (Windows host)
+* **Chosen:** Rust / Agave / Anchor run inside WSL2 Ubuntu 24.04. Sources live
+  on the Windows filesystem (`C:\Users\…\solprojbackstop`), build artifacts go
+  to a Linux-side target dir (`CARGO_TARGET_DIR=$HOME/.backstop-target`) for
+  speed.
+* **Rejected:** native Windows (Anchor/`solana-test-validator` are not
+  supported); Docker dev container (bind-mounted cargo builds are slow on
+  Windows; Docker remains used for Postgres/Redis).
+* **Notes:** toolchain installed from verified sources only: `rustup` from the
+  Ubuntu archive; Agave `v4.4.1` and Anchor CLI `v1.2.2` from their official
+  GitHub release artifacts, each checked against the SHA-256 digest published
+  by the GitHub releases API. No `curl | sh` installers.
+
+### D-002 · Versions
+| Component | Version | Reason |
+|---|---|---|
+| Rust (host) | 1.99.1 (pinned in `rust-toolchain.toml`) | latest stable; Anchor MSRV is 1.89 |
+| Agave / Solana CLI | 4.4.1 | latest stable release |
+| Anchor (`anchor-lang`, `anchor-spl`, CLI) | 1.2.2 | latest **stable** (2.0.0 is still `-rc`) |
+| Solana crates | v3 line (Anchor default feature `solana-v3`) | all SPL interface crates below share it |
+| `spl-transfer-hook-interface` | 2.1.0 | v3-compatible |
+| `spl-tlv-account-resolution` | 0.11.4 | v3-compatible |
+| `litesvm` | 0.15.x | matches Anchor 1.2.2 template / v3 types |
+
+The Anchor repository moved to `github.com/otter-sec/anchor`; verified via the
+crates.io `anchor-lang` metadata (repository + owners incl.
+`solana-foundation-tech`).
+
+### D-003 · Program keypairs are never in the repo
+Program and deployer keypairs live in `~/.config/backstop/program-keys/`
+(dev/localnet) or in the deployer's HSM / Squads flow (mainnet). `.gitignore`
+blocks `*-keypair.json`, `keys/`, `id.json`. Program IDs are declared in code
+and `Anchor.toml`; mainnet IDs are generated at mainnet deploy time (see
+`docs/DEPLOYMENT.md`).
+
+### D-004 · License: not chosen
+No license is declared (`publish = false`). Choosing one is the owner's
+decision; until then the code is "all rights reserved".
+
+### D-005 · Infrastructure as code: Terraform
+Terraform over Pulumi: more auditors/ops engineers can read HCL, mature
+providers for every target (Cloud Run/ECS, managed Postgres/Redis), and plan
+files are easy to review in PRs. Pulumi would have kept everything in
+TypeScript but adds a runtime dependency to infra changes.
+
+### D-006 · Program integration tests: LiteSVM (not bankrun)
+`solana-bankrun` is deprecated; LiteSVM is its successor and the default test
+template of Anchor 1.x. Program tests are Rust + LiteSVM (fast, in-process,
+supports clock warping and Token-2022 hooks). The full TypeScript lifecycle
+test (SDK-level) runs against `solana-test-validator`/Surfpool via
+`anchor test`.
+
+---
+
+## Program architecture
+
+### D-010 · Tenure & reward-weight state lives in the transfer-hook program
+The spec places tenure in `backstop-core` and the allowlist + reset in
+`transfer-hook`. Solana limits the instruction stack to 5 levels. The deepest
+path — offer settlement selling the remainder — is already
+`offers → amm → Token-2022 → hook` (4). A further hook → core CPI would sit
+exactly at the limit and make the whole design brittle. Therefore the hook
+program **owns** `Holder` (tenure + weight + reward checkpoint) and
+`RewardState`; `backstop-core` keeps config, fees, treasury and governance.
+The tenure *math* is shared via the pure `backstop-math` crate.
+
+### D-011 · Dependency DAG (no circular crates)
+`backstop-math` ← `backstop-common` ← `transfer-hook` ← `backstop-core` ←
+`backstop-amm` ← `backstop-offers` ← `backstop-chest` ← `backstop-launchpad`.
+"Upward" interactions (e.g. offers needing the Shield signer, core reading the
+AMM reserve) use program-ID constants and PDA/owner checks from
+`backstop-common`, never crate dependencies.
+
+### D-012 · Transfer-hook allowlist mechanism
+Requirements: tokens may only move through (a) the protocol AMM, (b) the offer
+book, (c) direct wallet-to-wallet transfers. The hook enforces three checks:
+1. **Top-level program check** via the Instructions sysvar: the top-level
+   instruction that caused the transfer must be either Token-2022 itself (a
+   user-signed direct transfer) or an allowlisted BACKSTOP program. Any other
+   program (DEX, aggregator, lending market, arbitrary CPI) is rejected.
+2. **Destination owner check:** the destination token account's owner must be
+   on the ed25519 curve (a real wallet; checked with the curve25519 syscall)
+   or one of the market's protocol authority PDAs stored in `HookConfig`
+   (AMM pool, offer escrow, chest/shield, launchpad vesting). Direct
+   (Token-2022 top-level) transfers may only target on-curve owners.
+3. **ImmutableOwner required on the destination.** Without it, Token-2022
+   allows `SetAuthority(AccountOwner)` to re-assign a token account that
+   already holds tokens to a DEX PDA *without* triggering the hook — a full
+   bypass. ATAs always carry ImmutableOwner, so normal wallets are
+   unaffected.
+* **Rejected:** passing the destination owner *account* via the newer
+  `PubkeyData` extra-meta type (to check the owner account's program) — not
+  reliably resolved by wallets yet, which would break plain wallet transfers.
+* **Consequence (documented in UI/README):** smart-contract wallets whose
+  vault is a PDA (e.g. Squads) cannot receive the token unless governance
+  allowlists that specific owner.
+
+### D-013 · One escrow authority per market (not per offer)
+Escrowed offer tokens are held by a single per-market escrow authority PDA so
+the hook's owner allowlist is a small static set. Per-offer escrow amounts are
+tracked in offer state; invariant `Σ offer.escrowed == escrow vault balance`
+is asserted in tests.
+
+### D-014 · Transfer-hook authority is revoked; no permanent delegate, no freeze
+The mint is created with the TransferHook extension pointing at the hook
+program and **no hook authority** (the hook program address can never be
+swapped; upgrades go through the program's 3-of-5 + 48 h timelocked upgrade
+authority). No PermanentDelegate, no freeze authority, no TransferFee,
+mint authority revoked after the fixed supply is minted. `backstop-core`
+verifies all of this on-chain before a market (including launchpad children)
+can go live.
+
+### D-015 · Protocol-owned, non-withdrawable AMM liquidity
+The AMM has no LP token and no remove-liquidity instruction. Initial liquidity
+(and every child's ≥ 5 SOL) is locked forever. Removes the LP-pull rug vector
+entirely.
+
+### D-016 · Quote asset per market
+The engine is parametrised by a quote mint. BACKSTOP's pool is
+**BACKSTOP/USDC** so offer fills, chests and the TWAP are all in USDC and no
+external price oracle is needed to price offers. Launchpad children are
+**CHILD/SOL** (wSOL), matching the "≥ 5 SOL initial liquidity" rule; their
+chests/shield are denominated in wSOL.
+* **Rejected:** BACKSTOP/SOL pool (needs a SOL/USD oracle to price USDC fills
+  — extra trust and manipulation surface).
+
+---
+
+## Economics & math
+
+### D-020 · Weighted distribution without loops (exact)
+`weight = balance × (1 + 2·min(avg_age/90d, 1))` grows continuously for every
+holder, so a reward-per-share accumulator cannot be used. Implemented a
+**piecewise-linear weight with scheduled caps** (veCRV-style slope schedule)
+evaluated at 6 h epoch boundaries: each wallet stores `(α, β, c, cap_epoch)`,
+the global stores `A, B, C` plus a 512-slot ring of cap deltas and
+accumulator snapshots. `W(k) = Σ w_i(k)` holds exactly; payouts use a closed
+form proven equal to the brute-force sum (property-tested against an O(n)
+model with 4 000+ random scenarios).
+* **Rejected:** stale stored multipliers refreshed by keeper "pokes" — simple,
+  but unfair to un-poked wallets and requires O(holders) transactions per
+  epoch.
+* **Bounds:** `tenure_cap_secs / epoch_secs + 3 < 512` (≤ ~120 days at 6 h
+  epochs). Changing `tenure_cap` or the multiplier applies to each wallet at
+  its next checkpoint (global sums stay consistent because they are sums of
+  stored per-wallet forms).
+* **Idle wallets:** a wallet idle > ~128 days *after* reaching the cap falls
+  back to a conservative payout (never over-pays). The keeper checkpoints any
+  wallet approaching that horizon.
+
+### D-021 · Accumulators use wrapping arithmetic
+Reward accumulators (`R`, `RT`) and the TWAP cumulative wrap like
+Uniswap-v2's price accumulator; consumers only use wrapping differences. This
+removes any possibility of an overflow error inside the transfer hook (which
+would freeze transfers).
+
+### D-022 · Randomised pro-rata = lot-based systematic sampling
+Offers are split into `L` lots (default 100). Oversubscribed lots are
+allocated by systematic sampling over bidders' lot capacities with a random
+offset. Each bidder receives `floor` or `ceil` of its exact pro-rata share
+(**bias < 1 lot**, unbiased in expectation), never more than it can pay for,
+and the allocation is computable per bid in O(1) → lazy claims, no loops.
+* **Rejected:** pure base-unit pro-rata (randomness irrelevant → no lottery
+  for small bidders, dust everywhere); weighted random selection of whole
+  bids (high variance, needs iteration over bids).
+
+### D-023 · Randomness: pre-committed future slot hash
+At bid close the offer records `rand_slot = current_slot + 4`; settlement
+reads that slot's hash from `SlotHashes` (must occur within its 512-slot
+retention) and seeds the allocation with `sha256(slot_hash ‖ offer ‖ lots)`.
+The cranker cannot pick the slot. Bias bounds: a malicious leader of
+`rand_slot` can grind a few bank hashes and a censoring cranker can force at
+most one re-roll per 512 slots; either moves at most **1 lot per bidder**
+(zero-sum between bidders). A VRF adapter (Switchboard) is left as a
+feature-flagged upgrade path.
+
+### D-024 · Absorbers pay no buy fee on offer fills
+The 3 % trade fee is charged once per trade: the seller pays it on fill
+proceeds; the absorber receives the discount. AMM buys and sells each pay 3 %.
+* **Rejected:** charging both sides on fills (6 % round trip would make the
+  5 % default discount uneconomic for absorbers).
+
+### D-025 · Shield priority is decided at settlement, atomically
+The Shield's priority slice (≤ 50 % of lots, ≤ per-offer cap) is computed and
+paid **inside the settlement instruction**, so its USDC loss and token gain are
+booked atomically. This keeps Liquity-style product/sum accounting exact
+(depositors joining between a bid and its settlement cannot capture gains they
+did not fund). Settlement is therefore always routed through the chest
+program (which signs as the Shield).
+
+### D-026 · Shield accounting = Liquity Stability Pool algorithm
+Deposits deplete by a common product `P` as the Shield absorbs; token gains
+(`S`) and lock-weighted fee rewards (`G`) accrue per (epoch, scale). Lock
+multiplier = `lock / 30 d`, capped at 12×. Positions are immutable after
+creation; principal is withdrawable after the lock; gains anytime.
+Accumulators are pre-multiplied by `P` without Liquity's extra 1e18 factor
+(token gains have 9 decimals vs USDC's 6, which overflowed `u128`).
+
+### D-027 · Chests use share accounting with internal asset tracking
+Chest balances are shares of a pooled vault (+ yield adapter position).
+`total_assets` is tracked internally (donations ignored) and conversions use
+a virtual offset — neutralising first-depositor inflation attacks.
+
+### D-028 · Chest lock: deposits *and* reward harvests are deposit events
+The 60-day rolling lock restarts on every deposit event, and harvesting fee
+rewards into the chest is a deposit event. Chests are war chests for
+absorbing; holders who exit (sell) stop earning, and their chest unlocks 60
+days after their last harvest. Early withdrawal pays the 25 % penalty to
+Shield rewards. Returning Shield principal and offer refunds are **not**
+deposit events.
+
+### D-029 · Direct AMM sells below the minimum offer size are rate-limited
+Sells under 0.01 % of supply go straight to the AMM (taxed). To stop large
+sells being split into many small ones, the hook enforces a rolling 24 h
+per-wallet cap equal to the minimum offer size, and the AMM enforces a global
+hourly cap on direct sells. Sybil splitting across wallets remains possible
+at a per-wallet rent cost; see THREAT_MODEL.md.
+
+### D-030 · Circulating supply for the treasury floor
+`circulating = mint supply − AMM base reserve` (tokens held by the protocol
+pool are not claims on the treasury). Escrowed offer tokens still count as
+circulating (they belong to the seller until filled).
+
+### D-031 · Self-fill protection limits
+On-chain ring buffer (8 entries) of recent direct inbound senders per wallet,
+recorded for transfers ≥ `link_min_amount`. A bidder listed in the seller's
+buffer within 24 h cannot bid. Limits (documented in UI and threat model):
+does not see SOL/USDC funding, only transfers made after the seller's holder
+account was registered, and a determined attacker can flush 8 entries with
+non-dust transfers.
+
+### D-032 · Rounding policy
+All rounding favours the protocol/pool/remaining participants: fees and lot
+costs round up, payouts round down, tracked totals stay ≥ the sum of claims.

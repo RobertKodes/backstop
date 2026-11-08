@@ -1,0 +1,50 @@
+# Rust / Anchor
+/target
+**/target
+*.so
+.anchor
+test-ledger
+.surfpool
+
+# Program keypairs and wallets are NEVER committed (see docs/DEPLOYMENT.md)
+*-keypair.json
+keys/
+id.json
+
+# Node
+node_modules
+.pnpm-store
+dist
+.next
+out
+coverage
+*.tsbuildinfo
+.turbo
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Playwright
+playwright-report
+test-results
+blob-report
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl.bak
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# Fuzzing artifacts
+fuzz/artifacts
+fuzz/corpus

@@ -1,0 +1,16 @@
+[package]
+name = "backstop-math"
+version = "0.1.0"
+description = "Pure, deterministic fixed-point math for the BACKSTOP protocol (tenure, weights, rewards, allocation, AMM, shield)."
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lib]
+name = "backstop_math"
+
+[dependencies]
+uint = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
