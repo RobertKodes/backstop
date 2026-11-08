@@ -1,0 +1,50 @@
+# Coverage-guided fuzzing (libFuzzer) of the offer allocator and the tenure /
+# reward accumulator. Separate workspace: needs nightly + cargo-fuzz.
+#
+#   cargo +nightly fuzz run allocator -- -max_total_time=600
+#   cargo +nightly fuzz run rewards   -- -max_total_time=600
+#   cargo +nightly fuzz run tenure    -- -max_total_time=600
+#
+# The same specs run on stable via proptest:
+#   FUZZ_CASES=100000 cargo test -p backstop-math --test proptests --release
+[package]
+name = "backstop-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+backstop-math = { path = "../crates/backstop-math", features = ["check"] }
+
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "allocator"
+path = "fuzz_targets/allocator.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "rewards"
+path = "fuzz_targets/rewards.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tenure"
+path = "fuzz_targets/tenure.rs"
+test = false
+doc = false
+bench = false
+
+[profile.release]
+debug = 1
+debug-assertions = true
+overflow-checks = true

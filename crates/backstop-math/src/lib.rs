@@ -15,6 +15,8 @@
 
 pub mod allocation;
 pub mod amm;
+#[cfg(feature = "check")]
+pub mod check;
 pub mod discount;
 pub mod error;
 pub mod fees;

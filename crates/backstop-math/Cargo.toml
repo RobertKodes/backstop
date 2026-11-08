@@ -9,8 +9,13 @@ publish.workspace = true
 [lib]
 name = "backstop_math"
 
+[features]
+# Executable specs + brute-force models used by property tests and fuzzers.
+check = []
+
 [dependencies]
 uint = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }
+backstop-math = { path = ".", features = ["check"] }

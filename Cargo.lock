@@ -681,6 +681,7 @@ dependencies = [
 name = "backstop-math"
 version = "0.1.0"
 dependencies = [
+ "backstop-math",
  "proptest",
  "uint",
 ]
