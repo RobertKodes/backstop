@@ -316,3 +316,87 @@ never leaves the wallet/chest. Bids below one lot are rejected.
 Locking chest USDC into the Shield and getting principal back after the lock
 neither pays the chest penalty nor restarts the chest lock; Shield fee rewards
 credited to the chest *are* deposit events (consistent with D-028).
+
+## Launchpad (Phase 9)
+
+### D-050 · Child launch is a seven-step on-chain state machine
+Creating a child needs the mint, hook config + 48 KiB reward ledger, fixed
+supply, core market, AMM pool, offer book and chests. One transaction cannot
+hold all of it (account count, 10 KiB CPI allocation cap, CU), so
+`ChildLaunch.status` advances `created → hooked → minted → market → pool →
+book → live`, each step requiring the previous one. A failed step can be
+resumed (`LaunchpadClient.resumeSteps`) and nothing is tradable before `live`.
+*Rejected:* a single "mega-instruction" with address lookup tables (still
+exceeds CU and the reward-ledger allocation cap); off-chain sequencing without
+a status field (a half-launched child could be traded or re-initialised).
+
+### D-051 · Child mints are made safe by construction, not by review
+The launchpad itself creates the mint: TransferHook pointed at the BACKSTOP
+hook (authority none), metadata pointer to the mint itself, mint authority a
+PDA that is revoked after minting the fixed supply, no freeze authority, no
+permanent delegate, metadata update authority removed. `backstop-core`
+re-verifies the mint at market creation. Liquidity (≥ 5 SOL) goes into the AMM
+which has no withdraw path. Creator allocation (≤ 5 %) sits in a program
+vault and vests linearly (`config.vesting_secs`, 90 days).
+*Rejected:* accepting creator-made mints and checking extensions (larger attack
+surface; mint-close / re-init edge cases).
+
+### D-052 · Child quote is wSOL; parent share is swapped to the parent quote
+Children trade against wSOL so a launch needs only SOL. 30 % of child fees is
+reserved in a market-owned `parent_vault` and converted by the keeper
+(`convert_parent_share`) to the parent's quote with the same oracle bound as
+treasury swaps (≤ 0.5 %), then credited to BACKSTOP holders through the hook's
+tenure-weighted reward accumulator. Jupiter routes spend from the owner's ATA,
+so the keeper rewrites the route source to the PDA vault
+(`rewriteRouteSource`); this needs mainnet-fork verification before mainnet
+(tracked with the Kamino check in D-040).
+
+## AI treasury agent (Phase 10)
+
+### D-060 · One structured-output call per cycle; orchestration is plain code
+Each cycle sends a numeric 24 h snapshot plus the parameter/bounds table to
+Claude (`claude-opus-5-5`, effort `high`) and gets back a JSON object
+(assessment, proposals, post, feed) validated with zod. Policy, execution,
+posting and storage are deterministic code; the model holds no keys and calls
+no tools. *Rejected:* an open-ended tool-use agent loop (more attack surface
+and cost for a task that needs one judgement per cycle).
+
+### D-061 · Three independent limits on agent actions
+1. On-chain `AgentAuthority`: per-parameter enable flag, [min, max] and a 1 h
+   cooldown — the hard guarantee.
+2. Off-chain policy gate (`agent/src/policy.ts`): the same bounds plus a step
+   limit (default 25 % of the window per update), cross-parameter invariants
+   (mirror of `MarketParams::validate`), at most 2 updates per cycle, and no
+   actions at all when the window is thin (< 5 trades + offers).
+3. `DRY_RUN=true` by default.
+Anything not agent-tunable or out of bounds becomes a row in
+`agent_proposals` (and an optional webhook) for governance — never an action.
+
+### D-062 · Prompt-injection hygiene
+Only numeric aggregates reach the model. Free text written on-chain by users
+(offer messages, child names/URIs) is excluded; child symbols are reduced to
+`[A-Z0-9]{≤10}`. Even a fully compromised model output is bounded by D-061.
+
+### D-063 · Narration is copy-linted and outcome lines are appended by code
+The model writes before the policy runs, so it is told to phrase changes as
+proposals; the system appends factual "Applied on-chain / Deferred / Filed for
+governance" lines. Text that violates the copy guidelines (guaranteed,
+risk-free, yield/APY without "variable", investment framing, chest withdrawals
+not described as time-locked) is replaced by a deterministic template.
+
+### D-064 · Every post is stored with the exact snapshot it was based on
+`agent_posts.snapshot` holds the snapshot JSON sent to the model plus the
+assessment and feed; `agent_runs` records model requested/served (fallbacks),
+request id, prompt version, token usage and errors. Refusals, truncation and
+API errors produce a failed run and no post.
+
+### D-065 · Model refusals fall back server-side
+Requests opt into `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`)
+so a declined request is retried on Anthropic's recommended model for that
+refusal category; the serving model is recorded per run.
+
+### D-066 · X posting is feature-flagged and uses an OAuth 2.0 user token
+`X_ENABLED=false` by default. When on, `POST /2/tweets` with a user-context
+bearer token (`tweet.write`) obtained out of band; failures keep the post
+in-app only. *Rejected:* OAuth 1.0a request signing in-service (more secret
+material to hold, no benefit for a single posting account).

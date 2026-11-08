@@ -19,6 +19,7 @@ export interface Repo {
   children(): Promise<Row[]>;
   child(mint: string): Promise<Row | null>;
   agentPosts(mint: string | null, limit: number): Promise<Row[]>;
+  agentProposals(mint: string | null, status: string | null, limit: number): Promise<Row[]>;
   keeperRuns(limit: number): Promise<Row[]>;
 }
 
@@ -150,6 +151,14 @@ export class PgRepo implements Repo {
     return mint
       ? this.q("select * from agent_posts where mint = $1 order by created_at desc limit $2", [mint, limit])
       : this.q("select * from agent_posts order by created_at desc limit $1", [limit]);
+  }
+
+  agentProposals(mint: string | null, status: string | null, limit: number) {
+    return this.q(
+      `select * from agent_proposals where ($1::text is null or mint = $1) and ($2::text is null or status = $2)
+       order by created_at desc limit $3`,
+      [mint, status, limit],
+    );
   }
 
   keeperRuns(limit: number) {

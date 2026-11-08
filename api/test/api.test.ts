@@ -49,6 +49,9 @@ class FakeRepo implements Repo {
   async agentPosts() {
     return [{ body: "hello" }];
   }
+  async agentProposals() {
+    return [{ param: "yieldBufferBps", status: "open" }];
+  }
   async keeperRuns() {
     return [];
   }

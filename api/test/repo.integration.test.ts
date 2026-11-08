@@ -51,6 +51,7 @@ describe.skipIf(!url)("PgRepo against the indexer schema (integration)", () => {
     await get(`/v1/markets/${fx.mint}/tickets/${recent[0].seller}`);
     await get(`/v1/children`);
     await get(`/v1/agent/posts`);
+    await get(`/v1/agent/proposals?status=open`);
     await get(`/v1/keeper/runs`);
     await app.close();
   });

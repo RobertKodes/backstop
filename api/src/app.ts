@@ -174,6 +174,25 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     { schema: { tags: ["agent"], querystring: { type: "object", properties: { mint: base58, limit: { type: "integer", minimum: 1, maximum: 100, default: 20 } } }, response: { 200: arr } } },
     cached(15, (r) => deps.repo.agentPosts((r.query.mint as string) ?? null, Number(r.query.limit ?? 20))),
   );
+  app.get(
+    "/v1/agent/proposals",
+    {
+      schema: {
+        tags: ["agent"],
+        description: "Agent proposals that need governance review (not agent-tunable or outside on-chain bounds).",
+        querystring: {
+          type: "object",
+          properties: {
+            mint: base58,
+            status: { type: "string", enum: ["open", "accepted", "rejected", "superseded"] },
+            limit: { type: "integer", minimum: 1, maximum: 100, default: 50 },
+          },
+        },
+        response: { 200: arr },
+      },
+    },
+    cached(15, (r) => deps.repo.agentProposals((r.query.mint as string) ?? null, (r.query.status as string) ?? null, Number(r.query.limit ?? 50))),
+  );
   app.get("/v1/keeper/runs", { schema: { tags: ["ops"], querystring: limitQs, response: { 200: arr } } }, cached(10, (r) => deps.repo.keeperRuns(Number(r.query.limit ?? 50))));
 
   // ------------------------------------------------------------ live (WS)
