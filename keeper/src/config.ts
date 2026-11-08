@@ -32,6 +32,8 @@ const Env = z.object({
   DISTRIBUTE_MIN: z.coerce.bigint().default(1_000_000n),
   /** Minimum treasury-vault balance before converting. */
   CONVERT_MIN: z.coerce.bigint().default(10_000_000n),
+  /** Minimum pending redemption-fee lamports before converting them to Shield rewards. */
+  SHIELD_CONVERT_MIN_LAMPORTS: z.coerce.bigint().default(100_000_000n),
   /** Seconds between TWAP chunks of a large conversion. */
   CHUNK_INTERVAL_SECS: z.coerce.number().default(120),
   PRIORITY_FEE_MICROLAMPORTS: z.coerce.number().default(10_000),
@@ -52,6 +54,7 @@ export interface Config {
   slippageBps: number;
   distributeMin: bigint;
   convertMin: bigint;
+  shieldConvertMinLamports: bigint;
   chunkIntervalSecs: number;
   priorityFee: number;
   logLevel: string;
@@ -90,6 +93,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     slippageBps: e.SWAP_SLIPPAGE_BPS,
     distributeMin: e.DISTRIBUTE_MIN,
     convertMin: e.CONVERT_MIN,
+    shieldConvertMinLamports: e.SHIELD_CONVERT_MIN_LAMPORTS,
     chunkIntervalSecs: e.CHUNK_INTERVAL_SECS,
     priorityFee: e.PRIORITY_FEE_MICROLAMPORTS,
     logLevel: e.LOG_LEVEL,

@@ -69,3 +69,23 @@ describe("helpers", () => {
     expect(shuffle(xs, 7)).toEqual(shuffle(xs, 7));
   });
 });
+
+describe("route rewriting", () => {
+  it("points a Jupiter route at the parent-share vault instead of the owner ATA", async () => {
+    const { rewriteRouteSource } = await import("../src/jobs.js");
+    const { Keypair } = await import("@solana/web3.js");
+    const ata = Keypair.generate().publicKey;
+    const vault = Keypair.generate().publicKey;
+    const other = Keypair.generate().publicKey;
+    const out = rewriteRouteSource(
+      [
+        { pubkey: other, isSigner: false, isWritable: false },
+        { pubkey: ata, isSigner: false, isWritable: true },
+      ],
+      ata,
+      vault,
+    );
+    expect(out.map((a) => a.pubkey.toBase58())).toEqual([other.toBase58(), vault.toBase58()]);
+    expect(out[1]!.isWritable).toBe(true);
+  });
+});

@@ -51,8 +51,8 @@ pub mod backstop_launchpad {
         instructions::init_child_hook(ctx)
     }
 
-    pub fn mint_child_supply(ctx: Context<MintChildSupply>, vesting_secs: i64) -> Result<()> {
-        instructions::mint_child_supply(ctx, vesting_secs)
+    pub fn mint_child_supply(ctx: Context<MintChildSupply>) -> Result<()> {
+        instructions::mint_child_supply(ctx)
     }
 
     pub fn init_child_market(ctx: Context<InitChildMarket>) -> Result<()> {

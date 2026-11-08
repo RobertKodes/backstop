@@ -348,6 +348,8 @@ pub fn init_child_hook(ctx: Context<InitChildHook>) -> Result<()> {
 pub struct MintChildSupply<'info> {
     #[account(mut)]
     pub creator: Signer<'info>,
+    #[account(seeds = [seeds::LAUNCHPAD], bump = config.bump)]
+    pub config: Box<Account<'info, LaunchpadConfig>>,
     #[account(mut, seeds = [seeds::CHILD, mint.key().as_ref()], bump = child.bump, has_one = creator, has_one = mint)]
     pub child: Box<Account<'info, ChildLaunch>>,
     #[account(mut, mint::token_program = token_program)]
@@ -387,7 +389,7 @@ pub struct MintChildSupply<'info> {
 
 /// Mint the fixed supply (pool + vested creator allocation), then revoke the
 /// mint authority and freeze the metadata forever.
-pub fn mint_child_supply(ctx: Context<MintChildSupply>, vesting_secs: i64) -> Result<()> {
+pub fn mint_child_supply(ctx: Context<MintChildSupply>) -> Result<()> {
     require!(
         ctx.accounts.hook_config.reward_ready,
         LaunchpadError::HookNotReady
@@ -452,11 +454,11 @@ pub fn mint_child_supply(ctx: Context<MintChildSupply>, vesting_secs: i64) -> Re
         OptionalNonZeroPubkey::default(),
     )?;
     let now = Clock::get()?.unix_timestamp;
-    let _ = vesting_secs;
+    let vesting_secs = ctx.accounts.config.vesting_secs;
     let c = &mut ctx.accounts.child;
     c.vesting_bump = ctx.bumps.vesting_authority;
     c.vesting_start = now;
-    c.vesting_end = now + defaults::CHILD_VESTING_SECS;
+    c.vesting_end = now + vesting_secs;
     step(c, status::HOOKED, status::MINTED)
 }
 

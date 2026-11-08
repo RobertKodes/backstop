@@ -5,14 +5,16 @@ import ammIdl from "./idl/backstop_amm.json" with { type: "json" };
 import chestIdl from "./idl/backstop_chest.json" with { type: "json" };
 import coreIdl from "./idl/backstop_core.json" with { type: "json" };
 import hookIdl from "./idl/backstop_hook.json" with { type: "json" };
+import launchpadIdl from "./idl/backstop_launchpad.json" with { type: "json" };
 import offersIdl from "./idl/backstop_offers.json" with { type: "json" };
 import type { BackstopAmm } from "./idl/backstop_amm.js";
 import type { BackstopChest } from "./idl/backstop_chest.js";
 import type { BackstopCore } from "./idl/backstop_core.js";
 import type { BackstopHook } from "./idl/backstop_hook.js";
+import type { BackstopLaunchpad } from "./idl/backstop_launchpad.js";
 import type { BackstopOffers } from "./idl/backstop_offers.js";
 
-export type { BackstopAmm, BackstopChest, BackstopCore, BackstopHook, BackstopOffers };
+export type { BackstopAmm, BackstopChest, BackstopCore, BackstopHook, BackstopLaunchpad, BackstopOffers };
 
 export const IDLS = {
   hook: hookIdl as unknown as BackstopHook,
@@ -20,6 +22,7 @@ export const IDLS = {
   amm: ammIdl as unknown as BackstopAmm,
   offers: offersIdl as unknown as BackstopOffers,
   chest: chestIdl as unknown as BackstopChest,
+  launchpad: launchpadIdl as unknown as BackstopLaunchpad,
 };
 
 /** Read-only wallet for indexers/APIs that never sign. */
@@ -42,6 +45,7 @@ export interface Programs {
   amm: Program<BackstopAmm>;
   offers: Program<BackstopOffers>;
   chest: Program<BackstopChest>;
+  launchpad: Program<BackstopLaunchpad>;
 }
 
 export function makePrograms(connection: Connection, wallet: Wallet = new ReadonlyWallet()): Programs {
@@ -52,6 +56,7 @@ export function makePrograms(connection: Connection, wallet: Wallet = new Readon
     amm: new Program<BackstopAmm>(IDLS.amm, provider),
     offers: new Program<BackstopOffers>(IDLS.offers, provider),
     chest: new Program<BackstopChest>(IDLS.chest, provider),
+    launchpad: new Program<BackstopLaunchpad>(IDLS.launchpad, provider),
   };
 }
 

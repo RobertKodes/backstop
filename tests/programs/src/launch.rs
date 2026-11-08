@@ -190,9 +190,10 @@ impl Env {
         let vesting = pda::vesting(&mint).0;
         let ix = Instruction::new_with_bytes(
             ids::LAUNCHPAD,
-            &backstop_launchpad::instruction::MintChildSupply { vesting_secs: 0 }.data(),
+            &backstop_launchpad::instruction::MintChildSupply {}.data(),
             backstop_launchpad::accounts::MintChildSupply {
                 creator: c,
+                config: pda::launchpad().0,
                 child: pda::child(&mint).0,
                 mint,
                 mint_authority: pda::child_mint_authority(&mint).0,

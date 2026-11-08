@@ -257,6 +257,110 @@ export async function fees(c: JobContext): Promise<void> {
   });
 }
 
+const ATA_PROGRAM = new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+const SYSTEM_PROGRAM = new PublicKey("11111111111111111111111111111111");
+
+/**
+ * Jupiter routes spend from the owner's ATA. The parent-share vault is a PDA
+ * token account owned by the market, so point the route at it instead.
+ */
+export function rewriteRouteSource(accounts: AccountMeta[], from: PublicKey, to: PublicKey): AccountMeta[] {
+  return accounts.map((a) => (a.pubkey.equals(from) ? { ...a, pubkey: to } : a));
+}
+
+/** Child markets: swap the reserved parent share (wSOL) to the parent's quote and credit BACKSTOP holders. */
+export async function parentShare(c: JobContext): Promise<void> {
+  const { client, cfg } = c;
+  const market = await client.fetchMarket();
+  if (market.parent.equals(PublicKey.default)) return;
+  const parentVault = pda.parentVault(client.mint);
+  const bal = BigInt((await client.connection.getTokenAccountBalance(parentVault)).value.amount);
+  if (bal < cfg.convertMin) return;
+  const [chunk] = chunkPlan(bal, BigInt(market.params.maxSwapChunk.toString()));
+  if (!chunk) return;
+  const childMarket = pda.market(client.mint);
+  const parentMarketKey = pda.market(market.parent);
+  const parent = await client.programs.core.account.market.fetch(parentMarketKey);
+  let route: { accounts: AccountMeta[]; data: Buffer; lookupTables: PublicKey[] };
+  if (parent.quoteMint.equals(client.quote)) {
+    route = { accounts: [], data: Buffer.alloc(0), lookupTables: [] };
+  } else if (cfg.jupiterEnabled) {
+    const jup = new JupiterClient(cfg.jupiterUrl);
+    const q = await jup.quote(client.quote, parent.quoteMint, chunk, cfg.slippageBps);
+    const r = await jup.route(q, childMarket, parent.holderRewardsVault);
+    route = { accounts: rewriteRouteSource(r.accounts, ataClassic(childMarket, client.quote), parentVault), data: r.data, lookupTables: r.lookupTables };
+  } else if (market.swapProgram.equals(PROGRAM_IDS.mockSwap)) {
+    route = { ...mockSwapRoute(childMarket, client.quote, parent.quoteMint, parentVault, parent.holderRewardsVault, chunk), lookupTables: [] };
+  } else {
+    c.log.info("parent-share conversion skipped (no swap route configured)");
+    return;
+  }
+  const ix = await client.programs.core.methods
+    .convertParentShare(new BN(chunk.toString()), route.data)
+    .accountsStrict({
+      keeper: keeperKey(c),
+      market: childMarket,
+      parentMarket: parentMarketKey,
+      parentVault,
+      parentRewardsVault: parent.holderRewardsVault,
+      parentHookConfig: pda.hookConfig(market.parent),
+      parentRewardState: pda.rewardState(market.parent),
+      hookProgram: PROGRAM_IDS.hook,
+      oracleFeed: market.oracle.kind === 1 ? market.oracle.feed : null,
+      swapProgram: market.swapProgram,
+    } as never)
+    .remainingAccounts(route.accounts)
+    .instruction();
+  await c.sender.send([ix], {
+    job: "fees.convertParentShare",
+    detail: { chunk: chunk.toString(), parent: market.parent.toBase58() },
+    computeUnits: 1_000_000,
+    lookupTables: route.lookupTables,
+  });
+}
+
+/** Redemption-fee lamports reserved for the Shield → quote → Shield rewards. */
+export async function shieldLamports(c: JobContext): Promise<void> {
+  const { client, cfg } = c;
+  const market = await client.fetchMarket();
+  const pending = BigInt(market.shieldLamportsPending.toString());
+  if (pending < cfg.shieldConvertMinLamports) return;
+  const treasury = pda.treasury(client.mint);
+  const tempWsol = ataClassic(treasury, WSOL);
+  let route: { accounts: AccountMeta[]; data: Buffer; lookupTables: PublicKey[] };
+  if (client.quote.equals(WSOL)) {
+    route = { accounts: [], data: Buffer.alloc(0), lookupTables: [] };
+  } else if (cfg.jupiterEnabled) {
+    const jup = new JupiterClient(cfg.jupiterUrl);
+    const q = await jup.quote(WSOL, client.quote, pending, cfg.slippageBps);
+    const r = await jup.route(q, treasury, market.shieldRewardsVault);
+    route = { accounts: r.accounts, data: r.data, lookupTables: r.lookupTables };
+  } else if (market.swapProgram.equals(PROGRAM_IDS.mockSwap)) {
+    route = { ...mockSwapRoute(treasury, WSOL, client.quote, tempWsol, market.shieldRewardsVault, pending), lookupTables: [] };
+  } else {
+    c.log.info("shield lamports conversion skipped (no swap route configured)");
+    return;
+  }
+  const ix = await client.programs.core.methods
+    .convertShieldLamports(new BN(pending.toString()), route.data)
+    .accountsStrict({
+      keeper: keeperKey(c),
+      market: pda.market(client.mint),
+      treasury,
+      wsolMint: WSOL,
+      tempWsol,
+      shieldRewardsVault: market.shieldRewardsVault,
+      oracleFeed: market.oracle.kind === 1 ? market.oracle.feed : null,
+      swapProgram: market.swapProgram,
+      wsolTokenProgram: TOKEN_PROGRAM,
+      associatedTokenProgram: ATA_PROGRAM,
+      systemProgram: SYSTEM_PROGRAM,
+    } as never)
+    .remainingAccounts(route.accounts)
+    .instruction();
+  await c.sender.send([ix], { job: "fees.convertShieldLamports", detail: { lamports: pending.toString() }, computeUnits: 1_000_000, lookupTables: route.lookupTables });
+}
+
 // -------------------------------------------------- yield / epochs / snapshot
 
 export async function rebalance(c: JobContext): Promise<void> {

@@ -5,7 +5,7 @@ import pg from "pg";
 import { pino } from "pino";
 import { MemoryAudit, PgAudit } from "./audit.js";
 import { loadConfig } from "./config.js";
-import { autoAbsorb, epochs, fees, rebalance, settleOffers, snapshot, type JobContext } from "./jobs.js";
+import { autoAbsorb, epochs, fees, parentShare, rebalance, settleOffers, shieldLamports, snapshot, type JobContext } from "./jobs.js";
 import { Scheduler, webhookAlert } from "./scheduler.js";
 import { Sender } from "./tx.js";
 
@@ -28,6 +28,8 @@ async function main() {
     sched.add(`${m}:settle`, 5_000, () => settleOffers(ctx));
     sched.add(`${m}:autoabsorb`, 5_000, () => autoAbsorb(ctx));
     sched.add(`${m}:fees`, 60_000, () => fees(ctx));
+    sched.add(`${m}:parentShare`, 300_000, () => parentShare(ctx));
+    sched.add(`${m}:shieldLamports`, 900_000, () => shieldLamports(ctx));
     sched.add(`${m}:yield`, 3_600_000, () => rebalance(ctx));
     sched.add(`${m}:epochs`, 600_000, () => epochs(ctx));
     sched.add(`${m}:snapshot`, 3_600_000, () => snapshot(ctx));
